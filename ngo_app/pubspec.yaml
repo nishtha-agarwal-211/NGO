@@ -1,0 +1,80 @@
+name: ngo_app
+description: "NGO Management & Engagement App - Centralized member, donor, project, event, and media management."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # Supabase
+  supabase_flutter: ^2.9.0
+
+  # State Management
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+
+  # Navigation
+  go_router: ^14.8.1
+
+  # Local Database (Offline)
+  drift: ^2.22.1
+  sqlite3_flutter_libs: ^0.5.28
+
+  # Data Classes & Serialization
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+
+  # Image Handling
+  image_picker: ^1.1.2
+  flutter_image_compress: ^2.3.0
+  cached_network_image: ^3.4.1
+
+  # Network & Connectivity
+  connectivity_plus: ^6.1.1
+
+  # Background Tasks
+  workmanager: ^0.5.2
+
+  # Notifications
+  flutter_local_notifications: ^18.0.1
+
+  # UI Components
+  table_calendar: ^3.2.0
+  google_fonts: ^6.2.1
+  shimmer: ^3.0.0
+  flutter_staggered_animations: ^1.1.1
+
+  # Utilities
+  intl: ^0.20.2
+  url_launcher: ^6.3.1
+  uuid: ^4.5.1
+  path: ^1.9.1
+  path_provider: ^2.1.5
+  share_plus: ^10.1.4
+  flutter_svg: ^2.0.17
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+  # Code Generation
+  build_runner: ^2.4.14
+  freezed: ^2.5.7
+  json_serializable: ^6.9.2
+  riverpod_generator: ^2.6.3
+  drift_dev: ^2.22.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
