@@ -9,6 +9,7 @@ import '../../config/router.dart';
 import '../../models/member.dart';
 import '../../models/enums.dart';
 import '../../services/member_service.dart';
+import '../../services/auth_service.dart';
 
 /// Member list screen with search, filter, and rich member cards.
 class MemberListScreen extends ConsumerStatefulWidget {
@@ -60,6 +61,7 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
   @override
   Widget build(BuildContext context) {
     final memberListAsync = ref.watch(memberListProvider(_currentParams));
+    final isAdmin = ref.watch(isAdminProvider).valueOrNull ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -125,11 +127,13 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
         loading: () => _buildLoadingState(),
         error: (error, _) => _buildErrorState(error),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(AppRoutes.memberAdd),
-        icon: const Icon(Icons.person_add),
-        label: const Text('Add Member'),
-      ),
+      floatingActionButton: isAdmin
+          ? FloatingActionButton.extended(
+              onPressed: () => context.push(AppRoutes.memberAdd),
+              icon: const Icon(Icons.person_add),
+              label: const Text('Add Member'),
+            )
+          : null,
     );
   }
 

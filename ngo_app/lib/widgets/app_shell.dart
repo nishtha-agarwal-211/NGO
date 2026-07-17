@@ -80,7 +80,6 @@ class _AppShellState extends ConsumerState<AppShell> {
   }
 
   Widget _buildBottomNav(bool isAdmin) {
-    // Members and Donors tabs only visible to admin
     final items = <BottomNavigationBarItem>[
       const BottomNavigationBarItem(
         icon: Icon(Icons.dashboard_outlined),
@@ -92,12 +91,11 @@ class _AppShellState extends ConsumerState<AppShell> {
         activeIcon: Icon(Icons.people),
         label: 'Members',
       ),
-      if (isAdmin)
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.volunteer_activism_outlined),
-          activeIcon: Icon(Icons.volunteer_activism),
-          label: 'Donors',
-        ),
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.volunteer_activism_outlined),
+        activeIcon: Icon(Icons.volunteer_activism),
+        label: 'Donors',
+      ),
       const BottomNavigationBarItem(
         icon: Icon(Icons.folder_outlined),
         activeIcon: Icon(Icons.folder),

@@ -1,3 +1,163 @@
+# NGO Management App — Implementation Plan
+
+## Summary
+
+A Flutter (Dart) cross-platform mobile app (Android-first, iOS-ready) backed by Supabase (Postgres + Auth + Storage). Single admin has full CRUD access; members/volunteers can log in for read-only views. Public News archive is accessible without login.
+
+---
+
+## Confirmed Decisions (from PRD + clarifications)
+
+| Decision | Choice |
+|---|---|
+| Framework | **Flutter** (Dart), single codebase for Android + future iOS |
+| Backend | **Supabase** free tier (Postgres, Auth, Storage) |
+| Auth | **Email + password** via Supabase Auth |
+| User roles | **Admin** (full CRUD) + **Member** (read-only login, sees own profile + events) |
+| Offline support | **drift** (SQLite ORM for Flutter) for local queue, background sync |
+| Member photos | Uploaded to Supabase Storage in v1 |
+| Event volunteers | Pick from Members OR type ad-hoc names |
+| News bulk import | Not needed — manual entry for ~20-25 items |
+| State management | **Riverpod** (robust, testable, recommended for Flutter) |
+| Navigation | **GoRouter** (declarative, supports deep links, auth guards) |
+
+---
+
+## Confirmed Member Access Rules
+
+| Area | Member access | Admin access |
+|---|---|---|
+| Member profiles | **All profiles** (read-only) | Full CRUD |
+| Projects & events | **All** (read-only) | Full CRUD |
+| Donor data & donations | **Yes** (read-only) | Full CRUD |
+| Event photos & news | Read-only / public news | Full CRUD |
+| Dashboard stats | Read-only (when built) | Full access |
+| Editing anything | **No** | Yes |
+
+> [!NOTE]
+> **Member authentication flow:** Since members are first created by Admin in the directory, I'll implement it so that when Admin adds a member with an email, a Supabase Auth account is auto-created (or an invite is sent). The member can then set their password and log in. This avoids a separate "registration" flow.
+
+---
+
+## Proposed Project Structure
+
+```
+ngo/
+├── NGO_App_PRD.md                    # Existing PRD
+├── supabase/
+│   ├── migrations/
+│   │   └── 001_initial_schema.sql    # Full database schema
+│   ├── seed.sql                      # Optional seed data
+│   └── storage_policies.sql          # Storage bucket + RLS policies
+│
+└── ngo_app/                          # Flutter project root
+    ├── android/
+    ├── ios/
+    ├── lib/
+    │   ├── main.dart                 # App entry point
+    │   ├── app.dart                  # MaterialApp + GoRouter setup
+    │   │
+    │   ├── config/
+    │   │   ├── supabase_config.dart  # Supabase URL + anon key
+    │   │   ├── theme.dart            # App theme (colors, typography)
+    │   │   └── constants.dart        # App-wide constants
+    │   │
+    │   ├── models/                   # Data classes (freezed/json_serializable)
+    │   │   ├── member.dart
+    │   │   ├── donor.dart
+    │   │   ├── donation.dart
+    │   │   ├── project.dart
+    │   │   ├── event.dart
+    │   │   ├── photo.dart
+    │   │   ├── news_item.dart
+    │   │   └── event_volunteer.dart
+    │   │
+    │   ├── services/                 # Supabase + business logic
+    │   │   ├── auth_service.dart
+    │   │   ├── member_service.dart
+    │   │   ├── donor_service.dart
+    │   │   ├── donation_service.dart
+    │   │   ├── project_service.dart
+    │   │   ├── event_service.dart
+    │   │   ├── photo_service.dart
+    │   │   ├── news_service.dart
+    │   │   ├── notification_service.dart
+    │   │   └── sync_service.dart     # Offline queue + sync logic
+    │   │
+    │   ├── providers/                # Riverpod providers
+    │   │   ├── auth_provider.dart
+    │   │   ├── member_provider.dart
+    │   │   ├── donor_provider.dart
+    │   │   ├── project_provider.dart
+    │   │   ├── event_provider.dart
+    │   │   ├── news_provider.dart
+    │   │   └── dashboard_provider.dart
+    │   │
+    │   ├── screens/                  # Full-page screens
+    │   │   ├── auth/
+    │   │   │   └── login_screen.dart
+    │   │   ├── dashboard/
+    │   │   │   └── dashboard_screen.dart
+    │   │   ├── members/
+    │   │   │   ├── member_list_screen.dart
+    │   │   │   ├── member_detail_screen.dart
+    │   │   │   └── member_form_screen.dart
+    │   │   ├── donors/
+    │   │   │   ├── donor_list_screen.dart
+    │   │   │   ├── donor_detail_screen.dart
+    │   │   │   └── donor_form_screen.dart
+    │   │   ├── projects/
+    │   │   │   ├── project_list_screen.dart
+    │   │   │   ├── project_detail_screen.dart
+    │   │   │   └── project_form_screen.dart
+    │   │   ├── events/
+    │   │   │   ├── event_detail_screen.dart
+    │   │   │   ├── event_form_screen.dart
+    │   │   │   └── calendar_screen.dart
+    │   │   ├── photos/
+    │   │   │   ├── photo_gallery_screen.dart
+    │   │   │   └── photo_viewer_screen.dart
+    │   │   └── news/
+    │   │       ├── news_list_screen.dart
+    │   │       ├── news_detail_screen.dart
+    │   │       └── news_form_screen.dart
+    │   │
+    │   ├── widgets/                  # Reusable components
+    │   │   ├── app_drawer.dart
+    │   │   ├── search_bar.dart
+    │   │   ├── stat_card.dart
+    │   │   ├── member_card.dart
+    │   │   ├── donor_card.dart
+    │   │   ├── event_card.dart
+    │   │   ├── news_card.dart
+    │   │   ├── photo_grid.dart
+    │   │   ├── donation_form_widget.dart
+    │   │   ├── volunteer_picker.dart
+    │   │   └── empty_state.dart
+    │   │
+    │   ├── database/                 # Local SQLite (drift) for offline
+    │   │   ├── app_database.dart
+    │   │   ├── app_database.g.dart   # Generated
+    │   │   └── tables/
+    │   │       └── sync_queue.dart
+    │   │
+    │   └── utils/
+    │       ├── date_utils.dart
+    │       ├── image_utils.dart      # Compression + thumbnail generation
+    │       ├── validators.dart
+    │       └── extensions.dart
+    │
+    ├── pubspec.yaml
+    └── README.md
+```
+
+---
+
+## Supabase Schema (SQL)
+
+This is the complete initial migration. All tables use UUIDs, have `created_at`/`updated_at` timestamps, and enforce foreign key relationships.
+
+```sql
 -- ============================================================
 -- 001_initial_schema.sql
 -- NGO Management App — Supabase Postgres Schema
@@ -40,7 +200,6 @@ CREATE TABLE members (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
     photo_url TEXT,              -- Supabase Storage URL
-    photo_storage_path TEXT,    -- Storage path for deletion
     mobile TEXT NOT NULL,
     email TEXT,
     address TEXT,
@@ -60,7 +219,6 @@ CREATE UNIQUE INDEX idx_members_mobile ON members(mobile);
 CREATE INDEX idx_members_dob ON members(date_of_birth);
 CREATE INDEX idx_members_anniversary ON members(wedding_anniversary);
 CREATE INDEX idx_members_name ON members(name);
-CREATE INDEX idx_members_auth_user ON members(auth_user_id);
 
 -- Now add the FK from profiles → members
 ALTER TABLE profiles
@@ -112,7 +270,6 @@ CREATE TABLE projects (
 );
 
 CREATE INDEX idx_projects_status ON projects(status);
-CREATE INDEX idx_projects_type ON projects(project_type);
 
 -- ============================================================
 -- EVENTS (instances of a project)
@@ -121,7 +278,7 @@ CREATE INDEX idx_projects_type ON projects(project_type);
 CREATE TABLE events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    title TEXT,                 -- auto-generated or custom
+    title TEXT,                 -- auto-generated or custom, e.g., "Wednesday Food Donation — Jul 16, 2026"
     event_date DATE NOT NULL,
     event_time TIME,
     location TEXT,
@@ -408,3 +565,197 @@ CREATE POLICY "Admin full access to news items"
     ON news_items FOR ALL
     USING (is_admin())
     WITH CHECK (is_admin());
+```
+
+---
+
+## Supabase Storage Buckets
+
+```sql
+-- Storage bucket for event photos (private, requires auth)
+INSERT INTO storage.buckets (id, name, public) VALUES ('event-photos', 'event-photos', false);
+
+-- Storage bucket for member profile photos (private)
+INSERT INTO storage.buckets (id, name, public) VALUES ('member-photos', 'member-photos', false);
+
+-- Storage bucket for news clippings (public, for the public News archive)
+INSERT INTO storage.buckets (id, name, public) VALUES ('news-clippings', 'news-clippings', true);
+
+-- Storage policies
+-- Event photos: admin can upload/delete, authenticated can view
+CREATE POLICY "Admin upload event photos" ON storage.objects
+    FOR INSERT WITH CHECK (bucket_id = 'event-photos' AND is_admin());
+CREATE POLICY "Admin delete event photos" ON storage.objects
+    FOR DELETE USING (bucket_id = 'event-photos' AND is_admin());
+CREATE POLICY "Auth users view event photos" ON storage.objects
+    FOR SELECT USING (bucket_id = 'event-photos' AND auth.uid() IS NOT NULL);
+
+-- Member photos: admin can upload/delete, auth users can view
+CREATE POLICY "Admin upload member photos" ON storage.objects
+    FOR INSERT WITH CHECK (bucket_id = 'member-photos' AND is_admin());
+CREATE POLICY "Admin delete member photos" ON storage.objects
+    FOR DELETE USING (bucket_id = 'member-photos' AND is_admin());
+CREATE POLICY "Auth users view member photos" ON storage.objects
+    FOR SELECT USING (bucket_id = 'member-photos' AND auth.uid() IS NOT NULL);
+
+-- News clippings: admin can upload/delete, anyone can view (public bucket)
+CREATE POLICY "Admin upload news clippings" ON storage.objects
+    FOR INSERT WITH CHECK (bucket_id = 'news-clippings' AND is_admin());
+CREATE POLICY "Admin delete news clippings" ON storage.objects
+    FOR DELETE USING (bucket_id = 'news-clippings' AND is_admin());
+CREATE POLICY "Anyone view news clippings" ON storage.objects
+    FOR SELECT USING (bucket_id = 'news-clippings');
+```
+
+---
+
+## Key Flutter Dependencies
+
+| Package | Purpose |
+|---|---|
+| `supabase_flutter` | Supabase client (auth, database, storage) |
+| `flutter_riverpod` | State management |
+| `go_router` | Navigation + auth guards |
+| `drift` + `sqlite3_flutter_libs` | Local SQLite for offline queue |
+| `freezed` + `json_serializable` | Immutable data classes + JSON serialization |
+| `image_picker` | Camera/gallery photo selection |
+| `flutter_image_compress` | Photo compression + thumbnail generation |
+| `connectivity_plus` | Network status detection for offline mode |
+| `workmanager` | Background sync when connectivity returns |
+| `flutter_local_notifications` | Birthday/event reminders |
+| `intl` | Date formatting, localization |
+| `cached_network_image` | Image caching for galleries |
+| `url_launcher` | WhatsApp/SMS/call shortcuts |
+| `youtube_player_flutter` | YouTube embed in News screen |
+| `table_calendar` | Calendar view for events |
+
+---
+
+## Proposed Changes
+
+### Milestone 1: Project Setup + Supabase Schema
+
+#### [NEW] [supabase/migrations/001_initial_schema.sql](file:///Users/nishtha/Desktop/ngo/supabase/migrations/001_initial_schema.sql)
+Complete database schema as shown above — all tables, indexes, enums, triggers, RLS policies.
+
+#### [NEW] [supabase/storage_policies.sql](file:///Users/nishtha/Desktop/ngo/supabase/storage_policies.sql)
+Storage bucket creation and access policies.
+
+#### [NEW] Flutter project (`ngo_app/`)
+Scaffold via `flutter create`, configure Supabase client, theme, GoRouter shell with auth guard.
+
+---
+
+### Milestone 2: Auth + Member Management
+
+#### [NEW] Auth screens and service
+- Login screen (email + password)
+- Auth service wrapping Supabase Auth
+- Auth provider (Riverpod) managing session state
+- GoRouter auth redirect (unauthenticated → login, authenticated → dashboard)
+
+#### [NEW] Member CRUD
+- Member list screen (searchable, filterable by role/tags)
+- Member detail screen (profile view with "Wish" quick actions — WhatsApp/SMS/call)
+- Member form screen (add/edit with photo upload)
+- Birthday/anniversary reminder logic (query members with upcoming dates within 7 days)
+
+---
+
+### Milestone 3: Donor Management
+
+#### [NEW] Donor CRUD
+- Donor list screen (searchable)
+- Donor detail screen (contribution history)
+- Donor form screen (with duplicate detection by mobile number)
+- Auto-create donor flow (used later from event donation logging)
+
+---
+
+### Milestone 4: Project & Event Management
+
+#### [NEW] Project CRUD
+- Project list/detail/form screens
+- Recurring project setup (day of week, time, location)
+- Weekly event auto-generation logic (create next 4 weeks of events for recurring projects)
+
+#### [NEW] Event CRUD
+- Event detail screen (attendance, beneficiaries, donations, expenses, photos, notes)
+- Event form screen
+- Calendar view (all events across all projects)
+- Volunteer picker widget (select from Members + ad-hoc entry)
+- Donation logging from within an event (with auto-donor creation)
+- Expense line-item logging
+
+---
+
+### Milestone 5: Photo Upload + Offline Support
+
+#### [NEW] Photo management
+- Camera/gallery picker on event detail screen
+- Client-side image compression + thumbnail generation
+- Upload to Supabase Storage with proper paths
+- Photo gallery per event and per project
+
+#### [NEW] Offline queue
+- drift (SQLite) tables for sync queue (pending creates/updates/photo uploads)
+- Connectivity detection
+- Background sync via WorkManager
+- Sync status indicator in UI
+
+---
+
+### Milestone 6: News & Media Coverage
+
+#### [NEW] News archive
+- News list screen (chronological, filterable by type + year, searchable)
+- News detail screen (article link / YouTube embed)
+- News form screen (admin only — add article or video)
+- Public access (no auth required to view news)
+
+---
+
+### Milestone 7: Dashboard + Notifications
+
+#### [NEW] Dashboard
+- Today/this week's events
+- Upcoming birthdays/anniversaries (next 7 days)
+- Recent donors
+- Quick stats (total members, donors, monthly donations, events held)
+
+#### [NEW] Notifications
+- Local notifications for birthday/anniversary reminders
+- Event reminders (e.g., "Wednesday Food Donation tomorrow")
+- Scheduled notification checks via WorkManager
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- Unit tests for services (member, donor, donation, project, event, news)
+- Widget tests for key screens (login, member form, event form)
+- Integration tests for auth flow and offline sync
+
+### Manual Verification
+- Run on Android emulator and/or physical device
+- Test offline workflow: airplane mode → log event → re-enable network → verify sync
+- Test all CRUD operations for each entity
+- Verify RLS policies (member login can only see allowed data)
+- Verify public News archive works without login
+- Verify photo upload/compression/thumbnail flow
+- Verify birthday/anniversary reminder notifications
+
+---
+
+## Build Order
+
+I will build and deliver incrementally in this order, pausing after each milestone for your review:
+
+1. **Milestone 1** — Flutter project scaffold + Supabase SQL files
+2. **Milestone 2** — Auth + Member Management
+3. **Milestone 3** — Donor Management
+4. **Milestone 4** — Project & Event Management
+5. **Milestone 5** — Photo Upload + Offline Support
+6. **Milestone 6** — News & Media Coverage
+7. **Milestone 7** — Dashboard + Notifications

@@ -8,6 +8,7 @@ import '../../config/router.dart';
 import '../../models/project.dart';
 import '../../models/enums.dart';
 import '../../services/project_service.dart';
+import '../../services/auth_service.dart';
 
 /// Project list screen with status badges, category chips, and filters.
 class ProjectListScreen extends ConsumerStatefulWidget {
@@ -55,6 +56,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
   @override
   Widget build(BuildContext context) {
     final projectListAsync = ref.watch(projectListProvider(_currentParams));
+    final isAdmin = ref.watch(isAdminProvider).valueOrNull ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -149,11 +151,13 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(AppRoutes.projectAdd),
-        icon: const Icon(Icons.add),
-        label: const Text('Add Project'),
-      ),
+      floatingActionButton: isAdmin
+          ? FloatingActionButton.extended(
+              onPressed: () => context.push(AppRoutes.projectAdd),
+              icon: const Icon(Icons.add),
+              label: const Text('Add Project'),
+            )
+          : null,
     );
   }
 

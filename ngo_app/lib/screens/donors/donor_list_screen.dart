@@ -9,6 +9,7 @@ import '../../config/router.dart';
 import '../../models/donor.dart';
 import '../../models/enums.dart';
 import '../../services/donor_service.dart';
+import '../../services/auth_service.dart';
 
 /// Donor list screen with search, filter by type, and rich donor cards.
 class DonorListScreen extends ConsumerStatefulWidget {
@@ -59,6 +60,7 @@ class _DonorListScreenState extends ConsumerState<DonorListScreen> {
   @override
   Widget build(BuildContext context) {
     final donorListAsync = ref.watch(donorListProvider(_currentParams));
+    final isAdmin = ref.watch(isAdminProvider).valueOrNull ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -126,11 +128,13 @@ class _DonorListScreenState extends ConsumerState<DonorListScreen> {
         loading: () => _buildLoadingState(),
         error: (error, _) => _buildErrorState(error),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push(AppRoutes.donorAdd),
-        icon: const Icon(Icons.person_add),
-        label: const Text('Add Donor'),
-      ),
+      floatingActionButton: isAdmin
+          ? FloatingActionButton.extended(
+              onPressed: () => context.push(AppRoutes.donorAdd),
+              icon: const Icon(Icons.person_add),
+              label: const Text('Add Donor'),
+            )
+          : null,
     );
   }
 

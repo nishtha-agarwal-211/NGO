@@ -10,6 +10,7 @@ import '../../models/donor.dart';
 import '../../models/donation.dart';
 import '../../models/enums.dart';
 import '../../services/donor_service.dart';
+import '../../services/auth_service.dart';
 
 /// Donor profile screen with contact info, donation history, and totals.
 class DonorDetailScreen extends ConsumerWidget {
@@ -22,6 +23,7 @@ class DonorDetailScreen extends ConsumerWidget {
     final donorAsync = ref.watch(donorDetailProvider(donorId));
     final donationsAsync = ref.watch(donorDonationsProvider(donorId));
     final totalAsync = ref.watch(donorTotalDonatedProvider(donorId));
+    final isAdmin = ref.watch(isAdminProvider).valueOrNull ?? false;
 
     return Scaffold(
       body: donorAsync.when(
@@ -31,6 +33,7 @@ class DonorDetailScreen extends ConsumerWidget {
             donor: donor,
             donationsAsync: donationsAsync,
             totalDonated: totalAsync.valueOrNull ?? 0,
+            isAdmin: isAdmin,
             onDelete: () => _deleteDonor(context, ref, donor),
           );
         },
@@ -102,12 +105,14 @@ class _DonorDetailBody extends StatelessWidget {
   final Donor donor;
   final AsyncValue<List<Donation>> donationsAsync;
   final double totalDonated;
+  final bool isAdmin;
   final VoidCallback onDelete;
 
   const _DonorDetailBody({
     required this.donor,
     required this.donationsAsync,
     required this.totalDonated,
+    required this.isAdmin,
     required this.onDelete,
   });
 
@@ -178,25 +183,27 @@ class _DonorDetailBody extends StatelessWidget {
       backgroundColor: AppTheme.accentColor,
       foregroundColor: Colors.white,
       actions: [
-        IconButton(
-          icon: const Icon(Icons.edit_outlined),
-          onPressed: () => context.push('/donors/${donor.id}/edit'),
-        ),
-        PopupMenuButton<String>(
-          onSelected: (v) { if (v == 'delete') onDelete(); },
-          itemBuilder: (ctx) => [
-            const PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(Icons.delete_outline, color: AppTheme.errorColor, size: 20),
-                  SizedBox(width: 8),
-                  Text('Delete', style: TextStyle(color: AppTheme.errorColor)),
-                ],
+        if (isAdmin) ...[
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => context.push('/donors/${donor.id}/edit'),
+          ),
+          PopupMenuButton<String>(
+            onSelected: (v) { if (v == 'delete') onDelete(); },
+            itemBuilder: (ctx) => [
+              const PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_outline, color: AppTheme.errorColor, size: 20),
+                    SizedBox(width: 8),
+                    Text('Delete', style: TextStyle(color: AppTheme.errorColor)),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        ],
       ],
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
