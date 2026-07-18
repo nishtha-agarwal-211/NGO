@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:workmanager/workmanager.dart';
@@ -35,25 +36,27 @@ void main() async {
     publishableKey: SupabaseConfig.supabaseAnonKey,
   );
 
-  // Initialize local notifications
-  await NotificationService.initialize();
+  if (!kIsWeb) {
+    // Initialize local notifications
+    await NotificationService.initialize();
 
-  // Initialize WorkManager for background tasks
-  await Workmanager().initialize(
-    backgroundTaskDispatcher,
-    isInDebugMode: false,
-  );
+    // Initialize WorkManager for background tasks
+    await Workmanager().initialize(
+      backgroundTaskDispatcher,
+      isInDebugMode: false,
+    );
 
-  // Register periodic background task (every 12 hours)
-  await Workmanager().registerPeriodicTask(
-    BackgroundWorker.taskName,
-    BackgroundWorker.taskName,
-    frequency: const Duration(hours: 12),
-    constraints: Constraints(
-      networkType: NetworkType.connected,
-    ),
-    existingWorkPolicy: ExistingWorkPolicy.keep,
-  );
+    // Register periodic background task (every 12 hours)
+    await Workmanager().registerPeriodicTask(
+      BackgroundWorker.taskName,
+      BackgroundWorker.taskName,
+      frequency: const Duration(hours: 12),
+      constraints: Constraints(
+        networkType: NetworkType.connected,
+      ),
+      existingWorkPolicy: ExistingWorkPolicy.keep,
+    );
+  }
 
   runApp(
     const ProviderScope(
@@ -79,6 +82,7 @@ class _NgoAppState extends ConsumerState<NgoApp> {
   }
 
   Future<void> _runInitialNotificationCheck() async {
+    if (kIsWeb) return;
     // Delay slightly so providers are ready
     await Future.delayed(const Duration(seconds: 3));
     ref.read(notificationCheckProvider);

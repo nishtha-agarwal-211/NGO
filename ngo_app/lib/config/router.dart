@@ -117,12 +117,6 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Detail / Form routes (outside shell — full screen)
       GoRoute(
-        path: AppRoutes.memberDetail,
-        builder: (context, state) => MemberDetailScreen(
-          memberId: state.pathParameters['id']!,
-        ),
-      ),
-      GoRoute(
         path: AppRoutes.memberAdd,
         builder: (context, state) => const MemberFormScreen(),
       ),
@@ -133,9 +127,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: AppRoutes.donorDetail,
-        builder: (context, state) => DonorDetailScreen(
-          donorId: state.pathParameters['id']!,
+        path: AppRoutes.memberDetail,
+        builder: (context, state) => MemberDetailScreen(
+          memberId: state.pathParameters['id']!,
         ),
       ),
       GoRoute(
@@ -149,9 +143,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: AppRoutes.projectDetail,
-        builder: (context, state) => ProjectDetailScreen(
-          projectId: state.pathParameters['id']!,
+        path: AppRoutes.donorDetail,
+        builder: (context, state) => DonorDetailScreen(
+          donorId: state.pathParameters['id']!,
         ),
       ),
       GoRoute(
@@ -165,13 +159,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: AppRoutes.eventDetail,
-        builder: (context, state) => EventDetailScreen(
-          eventId: state.pathParameters['id']!,
+        path: AppRoutes.projectDetail,
+        builder: (context, state) => ProjectDetailScreen(
+          projectId: state.pathParameters['id']!,
         ),
       ),
       GoRoute(
-        path: '/events/add',
+        path: AppRoutes.eventAdd,
         builder: (context, state) {
           final projectId = state.uri.queryParameters['projectId'];
           return EventFormScreen(projectId: projectId);
@@ -184,14 +178,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: AppRoutes.calendar,
-        builder: (context, state) => const CalendarScreen(),
+        path: AppRoutes.eventDetail,
+        builder: (context, state) => EventDetailScreen(
+          eventId: state.pathParameters['id']!,
+        ),
       ),
       GoRoute(
-        path: AppRoutes.newsDetail,
-        builder: (context, state) => NewsDetailScreen(
-          newsId: state.pathParameters['id']!,
-        ),
+        path: AppRoutes.calendar,
+        builder: (context, state) => const CalendarScreen(),
       ),
       GoRoute(
         path: AppRoutes.newsAdd,
@@ -201,6 +195,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.newsEdit,
         builder: (context, state) => NewsFormScreen(
           newsId: state.pathParameters['id'],
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.newsDetail,
+        builder: (context, state) => NewsDetailScreen(
+          newsId: state.pathParameters['id']!,
         ),
       ),
       GoRoute(
