@@ -6,7 +6,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 
 import '../../config/theme.dart';
-import '../../config/router.dart';
 import '../../models/member.dart';
 import '../../models/enums.dart';
 import '../../services/member_service.dart';

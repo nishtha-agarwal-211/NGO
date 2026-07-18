@@ -1,4 +1,4 @@
-/// Enum types matching the Supabase database enums.
+// Enum types matching the Supabase database enums.
 
 enum MemberRole {
   admin,

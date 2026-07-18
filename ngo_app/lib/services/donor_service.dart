@@ -146,6 +146,18 @@ class DonorService {
     return total;
   }
 
+  /// Find a donor by mobile number (for auto-create flow in event donations).
+  Future<Donor?> findByMobile(String mobile) async {
+    final response = await _client
+        .from(AppConstants.donorsTable)
+        .select()
+        .eq('mobile', mobile)
+        .maybeSingle();
+
+    if (response == null) return null;
+    return Donor.fromJson(response);
+  }
+
   /// Check if a mobile number already exists (for duplicate detection).
   Future<bool> isMobileNumberTaken(String mobile, {String? excludeDonorId}) async {
     var query = _client

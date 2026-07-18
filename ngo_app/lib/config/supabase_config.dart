@@ -7,11 +7,11 @@ class SupabaseConfig {
 
   /// Your Supabase project URL
   /// Example: https://xyzcompanyid.supabase.co
-  static const String supabaseUrl = 'YOUR_SUPABASE_URL';
+  static const String supabaseUrl = 'https://mwzxaiqcgujcgvbslypq.supabase.co';
 
   /// Your Supabase anonymous (public) key
   /// This is safe to use in client-side code as RLS protects your data.
-  static const String supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
+  static const String supabaseAnonKey = 'sb_publishable_efra7-8leY8sgMVNwXNG_Q_1zXh5sz-';
 
   // Storage bucket names
   static const String eventPhotosBucket = 'event-photos';
