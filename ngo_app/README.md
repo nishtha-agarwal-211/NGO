@@ -1,16 +1,22 @@
-# ngo_app
+# NGO Manager — Flutter App
 
-A new Flutter project.
+This directory contains the Flutter application source code. For full project documentation, setup instructions, and architecture details, see the **[project-level README](../README.md)**.
 
-## Getting Started
+## Quick Commands
 
-This project is a starting point for a Flutter application.
+```bash
+# Install dependencies
+flutter pub get
 
-A few resources to get you started if this is your first Flutter project:
+# Generate code (Freezed, Riverpod, JSON serialization)
+dart run build_runner build --delete-conflicting-outputs
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+# Run on Chrome
+flutter run -d chrome
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Run on Android
+flutter run -d <device-id>
+
+# Build release APK
+flutter build apk --release
+```
