@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -26,6 +27,14 @@ class AuthService {
     return await _client.auth.signInWithPassword(
       email: email,
       password: password,
+    );
+  }
+
+  /// Sign in with Google OAuth.
+  Future<bool> signInWithGoogle() async {
+    return await _client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: kIsWeb ? null : 'io.supabase.ngoapp://login-callback',
     );
   }
 
