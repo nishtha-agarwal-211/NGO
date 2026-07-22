@@ -199,7 +199,7 @@ class _MemberDetailBody extends StatelessWidget {
                   _InfoRow(
                     icon: Icons.calendar_today_outlined,
                     label: 'Joined',
-                    value: _formatDate(member.joinDate),
+                    value: DateFormat('MMMM yyyy').format(member.joinDate),
                   ),
                   if (member.dateOfBirth != null)
                     _InfoRow(

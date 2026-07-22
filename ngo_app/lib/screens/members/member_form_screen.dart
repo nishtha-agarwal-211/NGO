@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'dart:io';
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart';
 
 import '../../config/theme.dart';
 import '../../models/member.dart';
@@ -39,7 +40,7 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
   DateTime? _weddingAnniversary;
   List<String> _tags = [];
   bool _isActive = true;
-  File? _selectedPhoto;
+  XFile? _selectedPhoto;
   String? _existingPhotoUrl;
   bool _isSaving = false;
   bool _isLoaded = false;
@@ -178,32 +179,14 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
             _buildRoleSelector(),
             const SizedBox(height: 24),
 
-            // Date pickers
-            _buildSectionLabel('Dates'),
+            // Joining Date Info
+            _buildSectionLabel('Joining Details'),
             const SizedBox(height: 12),
-            _buildDateField(
-              label: 'Join Date',
+            _buildMonthYearField(
+              label: 'Join Month & Year',
               icon: Icons.calendar_today_outlined,
               value: _joinDate,
               onChanged: (d) => setState(() => _joinDate = d),
-            ),
-            const SizedBox(height: 12),
-            _buildDateField(
-              label: 'Date of Birth',
-              icon: Icons.cake_outlined,
-              value: _dateOfBirth,
-              onChanged: (d) => setState(() => _dateOfBirth = d),
-              clearable: true,
-              onClear: () => setState(() => _dateOfBirth = null),
-            ),
-            const SizedBox(height: 12),
-            _buildDateField(
-              label: 'Wedding Anniversary',
-              icon: Icons.favorite_outline,
-              value: _weddingAnniversary,
-              onChanged: (d) => setState(() => _weddingAnniversary = d),
-              clearable: true,
-              onClear: () => setState(() => _weddingAnniversary = null),
             ),
             const SizedBox(height: 24),
 
@@ -265,7 +248,9 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
               radius: 52,
               backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
               backgroundImage: _selectedPhoto != null
-                  ? FileImage(_selectedPhoto!)
+                  ? (kIsWeb
+                      ? NetworkImage(_selectedPhoto!.path)
+                      : FileImage(io.File(_selectedPhoto!.path)) as ImageProvider)
                   : (_existingPhotoUrl != null
                       ? NetworkImage(_existingPhotoUrl!) as ImageProvider
                       : null),
@@ -343,7 +328,7 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
     );
 
     if (pickedFile != null) {
-      setState(() => _selectedPhoto = File(pickedFile.path));
+      setState(() => _selectedPhoto = pickedFile);
     }
   }
 
@@ -438,48 +423,131 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
     );
   }
 
-  Widget _buildDateField({
+  Widget _buildMonthYearField({
     required String label,
     required IconData icon,
-    required DateTime? value,
+    required DateTime value,
     required ValueChanged<DateTime> onChanged,
-    bool clearable = false,
-    VoidCallback? onClear,
   }) {
     return InkWell(
-      onTap: () => _pickDate(value, onChanged),
+      onTap: () => _pickMonthYear(value, onChanged),
       borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon),
-          suffixIcon: clearable && value != null
-              ? IconButton(
-                  icon: const Icon(Icons.close, size: 18),
-                  onPressed: onClear,
-                )
-              : const Icon(Icons.arrow_drop_down),
+          suffixIcon: const Icon(Icons.arrow_drop_down),
         ),
         child: Text(
-          value != null ? DateFormat('MMM d, yyyy').format(value) : 'Not set',
+          DateFormat('MMMM yyyy').format(value),
           style: GoogleFonts.inter(
             fontSize: 14,
-            color: value != null ? AppTheme.textPrimary : AppTheme.textHint,
+            color: AppTheme.textPrimary,
           ),
         ),
       ),
     );
   }
 
-  Future<void> _pickDate(DateTime? initial, ValueChanged<DateTime> onChanged) async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
+  Future<void> _pickMonthYear(DateTime initial, ValueChanged<DateTime> onChanged) async {
+    int selectedYear = initial.year;
+    int selectedMonth = initial.month;
+
+    final List<String> months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    final picked = await showDialog<DateTime>(
       context: context,
-      initialDate: initial ?? now,
-      firstDate: DateTime(1920),
-      lastDate: DateTime(now.year + 5),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text('Select Month & Year'),
+              content: SizedBox(
+                width: 300,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_left),
+                          onPressed: () {
+                            setStateDialog(() => selectedYear--);
+                          },
+                        ),
+                        Text(
+                          '$selectedYear',
+                          style: GoogleFonts.inter(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.arrow_right),
+                          onPressed: () {
+                            setStateDialog(() => selectedYear++);
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.center,
+                      children: List.generate(12, (index) {
+                        final isSelected = selectedMonth == index + 1;
+                        return ChoiceChip(
+                          label: SizedBox(
+                            width: 60,
+                            child: Center(
+                              child: Text(
+                                months[index].substring(0, 3),
+                                style: GoogleFonts.inter(
+                                  color: isSelected ? Colors.white : AppTheme.textPrimary,
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+                            ),
+                          ),
+                          selected: isSelected,
+                          selectedColor: AppTheme.primaryColor,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setStateDialog(() => selectedMonth = index + 1);
+                            }
+                          },
+                        );
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(DateTime(selectedYear, selectedMonth, 1));
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
-    if (picked != null) onChanged(picked);
+
+    if (picked != null) {
+      onChanged(picked);
+    }
   }
 
   Widget _buildTagsInput() {
@@ -608,7 +676,7 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
       if (_selectedPhoto != null && existing != null) {
         photoUrl = await service.uploadProfilePhoto(
           existing.id,
-          _selectedPhoto!.path,
+          _selectedPhoto!,
         );
       }
 
@@ -637,7 +705,7 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
         if (_selectedPhoto != null) {
           final newPhotoUrl = await service.uploadProfilePhoto(
             updated.id,
-            _selectedPhoto!.path,
+            _selectedPhoto!,
           );
           await service.updateMember(updated.copyWith(photoUrl: newPhotoUrl));
         }
@@ -647,7 +715,7 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
         if (_selectedPhoto != null) {
           final newPhotoUrl = await service.uploadProfilePhoto(
             created.id,
-            _selectedPhoto!.path,
+            _selectedPhoto!,
           );
           await service.updateMember(created.copyWith(photoUrl: newPhotoUrl));
         }

@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -125,15 +125,19 @@ class MemberService {
   }
 
   /// Upload a member profile photo and return the public URL.
-  Future<String> uploadProfilePhoto(String memberId, String filePath) async {
+  Future<String> uploadProfilePhoto(String memberId, XFile file) async {
     final storagePath = SupabaseConfig.memberPhotoPath(memberId);
+    final bytes = await file.readAsBytes();
 
     await _client.storage
         .from(SupabaseConfig.memberPhotosBucket)
-        .upload(
+        .uploadBinary(
           storagePath,
-          File(filePath),
-          fileOptions: const FileOptions(upsert: true),
+          bytes,
+          fileOptions: const FileOptions(
+            contentType: 'image/jpeg',
+            upsert: true,
+          ),
         );
 
     final url = _client.storage
