@@ -457,11 +457,17 @@ class _DateFolderTile extends StatelessWidget {
   });
 
   @override
+  @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('EEE, MMM d, yyyy');
-    final isCompleted = event.status == EventStatus.completed;
-    final isUpcoming = event.status == EventStatus.upcoming;
-    final isCancelled = event.status == EventStatus.cancelled;
+    final effectiveStatus = event.effectiveStatus;
+    final isCompleted = effectiveStatus == EventStatus.completed;
+    final isUpcoming = effectiveStatus == EventStatus.upcoming;
+    final isCancelled = effectiveStatus == EventStatus.cancelled;
+
+    final dateSub = event.formattedTimeRange.isNotEmpty
+        ? '${dateFormat.format(event.eventDate)} · ${event.formattedTimeRange}'
+        : dateFormat.format(event.eventDate);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -496,7 +502,7 @@ class _DateFolderTile extends StatelessWidget {
                 Container(
                   width: 52, height: 56,
                   decoration: BoxDecoration(
-                    color: _statusColor.withValues(alpha: 0.08),
+                    color: _statusColor(effectiveStatus).withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -507,7 +513,7 @@ class _DateFolderTile extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
-                          color: _statusColor,
+                          color: _statusColor(effectiveStatus),
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -516,7 +522,7 @@ class _DateFolderTile extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
-                          color: _statusColor,
+                          color: _statusColor(effectiveStatus),
                         ),
                       ),
                     ],
@@ -541,7 +547,7 @@ class _DateFolderTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        dateFormat.format(event.eventDate),
+                        dateSub,
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: AppTheme.textHint,
@@ -552,9 +558,9 @@ class _DateFolderTile extends StatelessWidget {
                       Row(
                         children: [
                           _infoChip(
-                            event.status.displayName,
-                            color: _statusColor,
-                            icon: _statusIcon,
+                            effectiveStatus.displayName,
+                            color: _statusColor(effectiveStatus),
+                            icon: _statusIcon(effectiveStatus),
                           ),
                           if (event.beneficiaryCount > 0) ...[
                             const SizedBox(width: 6),
@@ -618,16 +624,16 @@ class _DateFolderTile extends StatelessWidget {
     );
   }
 
-  Color get _statusColor {
-    switch (event.status) {
+  Color _statusColor(EventStatus status) {
+    switch (status) {
       case EventStatus.upcoming: return const Color(0xFF1565C0);
       case EventStatus.completed: return AppTheme.successColor;
       case EventStatus.cancelled: return AppTheme.errorColor;
     }
   }
 
-  IconData get _statusIcon {
-    switch (event.status) {
+  IconData _statusIcon(EventStatus status) {
+    switch (status) {
       case EventStatus.upcoming: return Icons.schedule;
       case EventStatus.completed: return Icons.check_circle_outline;
       case EventStatus.cancelled: return Icons.cancel_outlined;

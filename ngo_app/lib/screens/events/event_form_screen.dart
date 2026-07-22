@@ -36,6 +36,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
   String? _selectedProjectId;
   DateTime _eventDate = DateTime.now();
   TimeOfDay? _eventTime;
+  TimeOfDay? _eventEndTime;
   EventStatus _status = EventStatus.upcoming;
 
   bool _isSaving = false;
@@ -73,6 +74,15 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       final parts = event.eventTime!.split(':');
       if (parts.length >= 2) {
         _eventTime = TimeOfDay(
+          hour: int.parse(parts[0]),
+          minute: int.parse(parts[1]),
+        );
+      }
+    }
+    if (event.eventEndTime != null) {
+      final parts = event.eventEndTime!.split(':');
+      if (parts.length >= 2) {
+        _eventEndTime = TimeOfDay(
           hour: int.parse(parts[0]),
           minute: int.parse(parts[1]),
         );
@@ -166,36 +176,31 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
             const SizedBox(height: 16),
 
             // ─── Date and Time ─────────────────────────────────
+            InkWell(
+              onTap: _pickEventDate,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Event Date',
+                  prefixIcon: Icon(Icons.calendar_today),
+                ),
+                child: Text(
+                  DateFormat('EEE, MMM d, yyyy').format(_eventDate),
+                  style: GoogleFonts.inter(color: AppTheme.textPrimary),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
-                  flex: 3,
                   child: InkWell(
-                    onTap: _pickEventDate,
-                    borderRadius:
-                        BorderRadius.circular(AppTheme.radiusMedium),
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: 'Event Date',
-                        prefixIcon: Icon(Icons.calendar_today),
-                      ),
-                      child: Text(
-                        DateFormat('EEE, MMM d, yyyy').format(_eventDate),
-                        style: GoogleFonts.inter(color: AppTheme.textPrimary),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  flex: 2,
-                  child: InkWell(
-                    onTap: _pickEventTime,
+                    onTap: () => _pickEventTime(isStart: true),
                     borderRadius:
                         BorderRadius.circular(AppTheme.radiusMedium),
                     child: InputDecorator(
                       decoration: InputDecoration(
-                        labelText: 'Time',
+                        labelText: 'Start Time',
                         prefixIcon: const Icon(Icons.access_time),
                         suffixIcon: _eventTime != null
                             ? IconButton(
@@ -211,6 +216,37 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                             : 'N/A',
                         style: GoogleFonts.inter(
                           color: _eventTime != null
+                              ? AppTheme.textPrimary
+                              : AppTheme.textHint,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: InkWell(
+                    onTap: () => _pickEventTime(isStart: false),
+                    borderRadius:
+                        BorderRadius.circular(AppTheme.radiusMedium),
+                    child: InputDecorator(
+                      decoration: InputDecoration(
+                        labelText: 'End Time',
+                        prefixIcon: const Icon(Icons.access_time_filled),
+                        suffixIcon: _eventEndTime != null
+                            ? IconButton(
+                                icon: const Icon(Icons.clear, size: 18),
+                                onPressed: () =>
+                                    setState(() => _eventEndTime = null),
+                              )
+                            : null,
+                      ),
+                      child: Text(
+                        _eventEndTime != null
+                            ? _eventEndTime!.format(context)
+                            : 'N/A',
+                        style: GoogleFonts.inter(
+                          color: _eventEndTime != null
                               ? AppTheme.textPrimary
                               : AppTheme.textHint,
                         ),
@@ -383,7 +419,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       validator: (v) => v == null ? 'Please select a project' : null,
       onChanged: (v) {
         setState(() => _selectedProjectId = v);
-        // If user selects a project, auto-fill location from project recurrence
+        // If user selects a project, auto-fill location and recurrence times
         if (v != null) {
           final project = projects.firstWhere((p) => p.id == v);
           if (project.recurrenceLocation != null &&
@@ -395,6 +431,17 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
             if (parts.length >= 2) {
               setState(() {
                 _eventTime = TimeOfDay(
+                  hour: int.parse(parts[0]),
+                  minute: int.parse(parts[1]),
+                );
+              });
+            }
+          }
+          if (project.recurrenceEndTime != null && _eventEndTime == null) {
+            final parts = project.recurrenceEndTime!.split(':');
+            if (parts.length >= 2) {
+              setState(() {
+                _eventEndTime = TimeOfDay(
                   hour: int.parse(parts[0]),
                   minute: int.parse(parts[1]),
                 );
@@ -440,13 +487,22 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     }
   }
 
-  Future<void> _pickEventTime() async {
+  Future<void> _pickEventTime({required bool isStart}) async {
+    final initial = isStart
+        ? (_eventTime ?? const TimeOfDay(hour: 9, minute: 0))
+        : (_eventEndTime ?? _eventTime ?? const TimeOfDay(hour: 17, minute: 0));
     final picked = await showTimePicker(
       context: context,
-      initialTime: _eventTime ?? const TimeOfDay(hour: 9, minute: 0),
+      initialTime: initial,
     );
     if (picked != null) {
-      setState(() => _eventTime = picked);
+      setState(() {
+        if (isStart) {
+          _eventTime = picked;
+        } else {
+          _eventEndTime = picked;
+        }
+      });
     }
   }
 
@@ -461,6 +517,9 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
       final timeStr = _eventTime != null
           ? '${_eventTime!.hour.toString().padLeft(2, '0')}:${_eventTime!.minute.toString().padLeft(2, '0')}:00'
           : null;
+      final endTimeStr = _eventEndTime != null
+          ? '${_eventEndTime!.hour.toString().padLeft(2, '0')}:${_eventEndTime!.minute.toString().padLeft(2, '0')}:00'
+          : null;
 
       final now = DateTime.now();
       final event = Event(
@@ -471,6 +530,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
             : _titleController.text.trim(),
         eventDate: _eventDate,
         eventTime: timeStr,
+        eventEndTime: endTimeStr,
         location: _locationController.text.trim().isEmpty
             ? null
             : _locationController.text.trim(),

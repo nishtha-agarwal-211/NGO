@@ -23,6 +23,10 @@ class AppConstants {
   static const int imageQuality = 85;
   static const int thumbnailQuality = 70;
 
+  // Video Settings
+  static const int videoMaxDurationSeconds = 120; // 2 minutes max
+  static const int videoMaxSizeMB = 50;           // 50 MB max
+
   // Offline Sync
   static const Duration syncInterval = Duration(minutes: 5);
   static const int maxRetryAttempts = 3;

@@ -15,6 +15,57 @@ class EventService {
 
   EventService(this._client);
 
+  /// Sync event statuses in DB — mark any events whose end time/date has passed as 'completed'.
+  Future<void> _syncPastEventStatuses() async {
+    try {
+      final now = DateTime.now();
+      final todayStr = now.toIso8601String().split('T').first;
+
+      // 1. Mark events on past dates as completed
+      await _client
+          .from(AppConstants.eventsTable)
+          .update({'status': 'completed'})
+          .eq('status', 'upcoming')
+          .lt('event_date', todayStr);
+
+      // 2. Check today's upcoming events if their end time has passed
+      final todayEventsResponse = await _client
+          .from(AppConstants.eventsTable)
+          .select('id, event_date, event_time, event_end_time')
+          .eq('status', 'upcoming')
+          .eq('event_date', todayStr);
+
+      final todayEvents = todayEventsResponse as List;
+      final idsToComplete = <String>[];
+
+      for (final e in todayEvents) {
+        final timeToParse = (e['event_end_time'] ?? e['event_time']) as String?;
+        if (timeToParse != null && timeToParse.isNotEmpty) {
+          try {
+            final parts = timeToParse.split(':');
+            if (parts.length >= 2) {
+              final h = int.parse(parts[0]);
+              final m = int.parse(parts[1]);
+              final endDateTime = DateTime(now.year, now.month, now.day, h, m);
+              if (endDateTime.isBefore(now)) {
+                idsToComplete.add(e['id'] as String);
+              }
+            }
+          } catch (_) {}
+        }
+      }
+
+      if (idsToComplete.isNotEmpty) {
+        await _client
+            .from(AppConstants.eventsTable)
+            .update({'status': 'completed'})
+            .inFilter('id', idsToComplete);
+      }
+    } catch (_) {
+      // Gracefully ignore sync errors
+    }
+  }
+
   // ─── Events CRUD ──────────────────────────────────────────────
 
   /// Fetch all events, optionally filtered.
@@ -24,6 +75,8 @@ class EventService {
     DateTime? fromDate,
     DateTime? toDate,
   }) async {
+    await _syncPastEventStatuses();
+
     var query = _client
         .from(AppConstants.eventsTable)
         .select('*, projects(name)');
@@ -95,6 +148,8 @@ class EventService {
 
   /// Get upcoming events (today and future).
   Future<List<Event>> getUpcomingEvents({int limit = 10}) async {
+    await _syncPastEventStatuses();
+
     final today = DateTime.now().toIso8601String().split('T').first;
     final response = await _client
         .from(AppConstants.eventsTable)
@@ -104,12 +159,15 @@ class EventService {
         .order('event_date', ascending: true)
         .limit(limit);
 
-    return (response as List).map((json) => Event.fromJson(json)).toList();
+    final events = (response as List).map((json) => Event.fromJson(json)).toList();
+    return events.where((e) => e.isUpcoming).toList();
   }
 
   /// Get events for a date range (calendar view).
   Future<Map<DateTime, List<Event>>> getEventsForCalendar(
       DateTime firstDay, DateTime lastDay) async {
+    await _syncPastEventStatuses();
+
     final response = await _client
         .from(AppConstants.eventsTable)
         .select('*, projects(name)')
@@ -270,6 +328,7 @@ class EventService {
 
     final dayOfWeek = projectResponse['recurrence_day_of_week'] as int?;
     final time = projectResponse['recurrence_time'] as String?;
+    final endTime = projectResponse['recurrence_end_time'] as String?;
     final location = projectResponse['recurrence_location'] as String?;
     final projectName = projectResponse['name'] as String;
 
@@ -299,7 +358,6 @@ class EventService {
     // If the cursor date is today and it's already past, start from next week
     if (cursor.isAtSameMomentAs(DateTime(now.year, now.month, now.day)) ||
         cursor.isBefore(DateTime(now.year, now.month, now.day))) {
-      // Only skip if it's strictly before today
       if (cursor.isBefore(DateTime(now.year, now.month, now.day))) {
         cursor = cursor.add(const Duration(days: 7));
       }
@@ -332,13 +390,32 @@ class EventService {
       final title =
           '$projectName — ${dayNames[dayOfWeek]}, ${monthNames[date.month - 1]} ${date.day}';
 
+      // Check if end time / time on this date is in the past
+      final timeToParse = endTime ?? time;
+      bool isPast = false;
+      if (timeToParse != null && timeToParse.isNotEmpty) {
+        try {
+          final parts = timeToParse.split(':');
+          if (parts.length >= 2) {
+            final h = int.parse(parts[0]);
+            final m = int.parse(parts[1]);
+            final endDt = DateTime(date.year, date.month, date.day, h, m);
+            if (endDt.isBefore(now)) isPast = true;
+          }
+        } catch (_) {}
+      } else {
+        final endDt = DateTime(date.year, date.month, date.day, 23, 59, 59);
+        if (endDt.isBefore(now)) isPast = true;
+      }
+
       return {
         'project_id': projectId,
         'title': title,
         'event_date': date.toIso8601String().split('T').first,
         'event_time': time,
+        'event_end_time': endTime,
         'location': location,
-        'status': 'upcoming',
+        'status': isPast ? 'completed' : 'upcoming',
       };
     }).toList();
 

@@ -118,7 +118,7 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
                     children: [
                       const SizedBox(height: 20),
                       Icon(
-                        _statusIcon(widget.event.status),
+                        _statusIcon(widget.event.effectiveStatus),
                         size: 40,
                         color: Colors.white.withValues(alpha: 0.9),
                       ),
@@ -126,12 +126,12 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: _statusColor(widget.event.status).withValues(alpha: 0.2),
+                          color: _statusColor(widget.event.effectiveStatus).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                         ),
                         child: Text(
-                          widget.event.status.displayName,
+                          widget.event.effectiveStatus.displayName,
                           style: GoogleFonts.inter(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -249,6 +249,10 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
   // ─── Info Card ────────────────────────────────────────────────
 
   Widget _buildInfoCard() {
+    final timeDisplay = widget.event.formattedTimeRange.isNotEmpty
+        ? widget.event.formattedTimeRange
+        : widget.event.eventTime;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -259,9 +263,9 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
       child: Column(
         children: [
           _infoRow(Icons.calendar_today_outlined, 'Date', _dateFormat.format(widget.event.eventDate)),
-          if (widget.event.eventTime != null) ...[
+          if (timeDisplay != null && timeDisplay.isNotEmpty) ...[
             const Divider(height: 20),
-            _infoRow(Icons.access_time_outlined, 'Time', widget.event.eventTime!),
+            _infoRow(Icons.access_time_outlined, 'Time', timeDisplay),
           ],
           if (widget.event.location != null) ...[
             const Divider(height: 20),

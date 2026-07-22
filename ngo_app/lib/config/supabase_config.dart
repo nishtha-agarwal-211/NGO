@@ -15,6 +15,7 @@ class SupabaseConfig {
 
   // Storage bucket names
   static const String eventPhotosBucket = 'event-photos';
+  static const String eventVideosBucket = 'event-videos';
   static const String memberPhotosBucket = 'member-photos';
   static const String newsClippingsBucket = 'news-clippings';
 
@@ -24,6 +25,12 @@ class SupabaseConfig {
 
   static String eventThumbnailPath(String projectId, String eventId, String photoId) =>
       'projects/$projectId/events/$eventId/thumbnails/$photoId.jpg';
+
+  static String eventVideoPath(String projectId, String eventId, String videoId) =>
+      'projects/$projectId/events/$eventId/videos/$videoId.mp4';
+
+  static String eventVideoThumbnailPath(String projectId, String eventId, String videoId) =>
+      'projects/$projectId/events/$eventId/video-thumbnails/$videoId.jpg';
 
   static String memberPhotoPath(String memberId) =>
       'members/$memberId/profile.jpg';

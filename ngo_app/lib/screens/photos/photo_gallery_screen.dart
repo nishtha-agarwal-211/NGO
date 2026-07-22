@@ -5,15 +5,17 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shimmer/shimmer.dart';
 
 
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../config/theme.dart';
 import '../../models/photo.dart';
 import '../../services/photo_service.dart';
 import '../../services/event_service.dart';
 import '../../services/auth_service.dart';
 
-/// Full-screen photo gallery for an event.
-/// Supports upload from camera/gallery, grid/full-screen view,
-/// caption editing, featured toggle, and deletion.
+/// Full-screen photo/video gallery for an event.
+/// Supports upload from camera/gallery for photos and videos,
+/// grid/full-screen view, caption editing, featured toggle, and deletion.
 class PhotoGalleryScreen extends ConsumerStatefulWidget {
   final String eventId;
 
@@ -37,14 +39,14 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
     return Scaffold(
       appBar: AppBar(
         title: eventAsync.when(
-          data: (event) => Text(event?.displayTitle ?? 'Photo Gallery'),
-          loading: () => const Text('Photo Gallery'),
-          error: (_, __) => const Text('Photo Gallery'),
+          data: (event) => Text(event?.displayTitle ?? 'Media Gallery'),
+          loading: () => const Text('Media Gallery'),
+          error: (_, __) => const Text('Media Gallery'),
         ),
         actions: [
           if (isAdminAsync.valueOrNull == true)
             PopupMenuButton<String>(
-              icon: const Icon(Icons.add_photo_alternate_outlined),
+              icon: const Icon(Icons.add_a_photo_outlined),
               onSelected: _handleUploadOption,
               itemBuilder: (context) => [
                 const PopupMenuItem(
@@ -56,10 +58,26 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
                   ),
                 ),
                 const PopupMenuItem(
+                  value: 'record_video',
+                  child: ListTile(
+                    leading: Icon(Icons.videocam_outlined),
+                    title: Text('Record Video'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
                   value: 'gallery',
                   child: ListTile(
                     leading: Icon(Icons.photo_library_outlined),
-                    title: Text('From Gallery'),
+                    title: Text('Photo from Gallery'),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'video_gallery',
+                  child: ListTile(
+                    leading: Icon(Icons.video_library_outlined),
+                    title: Text('Video from Gallery'),
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
@@ -261,20 +279,32 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
       case 'camera':
         final xFile = await photoService.pickImage(source: ImageSource.camera);
         if (xFile != null) {
-          await _uploadSinglePhoto(xFile.path, event.projectId);
+          await _uploadSinglePhoto(xFile, event.projectId);
+        }
+        break;
+      case 'record_video':
+        final xFile = await photoService.pickVideo(source: ImageSource.camera);
+        if (xFile != null) {
+          await _uploadVideo(xFile, event.projectId);
         }
         break;
       case 'gallery':
         final xFile = await photoService.pickImage(source: ImageSource.gallery);
         if (xFile != null) {
-          await _uploadSinglePhoto(xFile.path, event.projectId);
+          await _uploadSinglePhoto(xFile, event.projectId);
+        }
+        break;
+      case 'video_gallery':
+        final xFile = await photoService.pickVideo(source: ImageSource.gallery);
+        if (xFile != null) {
+          await _uploadVideo(xFile, event.projectId);
         }
         break;
       case 'multi':
         final xFiles = await photoService.pickMultipleImages();
         if (xFiles.isNotEmpty) {
           await _uploadMultiplePhotos(
-            xFiles.map((f) => f.path).toList(),
+            xFiles,
             event.projectId,
           );
         }
@@ -282,7 +312,51 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
     }
   }
 
-  Future<void> _uploadSinglePhoto(String filePath, String projectId) async {
+  Future<void> _uploadVideo(XFile videoFile, String projectId) async {
+    setState(() {
+      _isUploading = true;
+      _uploadProgress = 0.5;
+      _uploadStatusText = 'Uploading video...';
+    });
+
+    try {
+      await ref.read(photoServiceProvider).uploadVideo(
+            eventId: widget.eventId,
+            projectId: projectId,
+            videoFile: videoFile,
+          );
+
+      ref.invalidate(eventPhotosProvider(widget.eventId));
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Video uploaded successfully'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Video upload failed: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+          _uploadProgress = 0;
+          _uploadStatusText = null;
+        });
+      }
+    }
+  }
+
+  Future<void> _uploadSinglePhoto(XFile file, String projectId) async {
     setState(() {
       _isUploading = true;
       _uploadProgress = 0;
@@ -293,7 +367,7 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
       await ref.read(photoServiceProvider).uploadPhoto(
             eventId: widget.eventId,
             projectId: projectId,
-            filePath: filePath,
+            file: file,
           );
 
       ref.invalidate(eventPhotosProvider(widget.eventId));
@@ -326,28 +400,28 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
     }
   }
 
-  Future<void> _uploadMultiplePhotos(List<String> filePaths, String projectId) async {
+  Future<void> _uploadMultiplePhotos(List<XFile> files, String projectId) async {
     setState(() {
       _isUploading = true;
       _uploadProgress = 0;
-      _uploadStatusText = 'Uploading 0/${filePaths.length}...';
+      _uploadStatusText = 'Uploading 0/${files.length}...';
     });
 
     final photoService = ref.read(photoServiceProvider);
     int uploaded = 0;
 
-    for (final path in filePaths) {
+    for (final file in files) {
       try {
         await photoService.uploadPhoto(
           eventId: widget.eventId,
           projectId: projectId,
-          filePath: path,
+          file: file,
         );
         uploaded++;
         if (mounted) {
           setState(() {
-            _uploadProgress = uploaded / filePaths.length;
-            _uploadStatusText = 'Uploading $uploaded/${filePaths.length}...';
+            _uploadProgress = uploaded / files.length;
+            _uploadStatusText = 'Uploading $uploaded/${files.length}...';
           });
         }
       } catch (e) {
@@ -366,7 +440,7 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('$uploaded/${filePaths.length} photos uploaded'),
+          content: Text('$uploaded/${files.length} photos uploaded'),
           backgroundColor: uploaded > 0 ? AppTheme.successColor : AppTheme.errorColor,
         ),
       );
@@ -415,7 +489,7 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
   }
 }
 
-// ─── Photo Grid Tile ────────────────────────────────────────────
+// ─── Photo / Video Grid Tile ────────────────────────────────────────────
 
 class _PhotoGridTile extends StatelessWidget {
   final Photo photo;
@@ -434,19 +508,78 @@ class _PhotoGridTile extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              CachedNetworkImage(
-                imageUrl: photo.displayUrl,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Shimmer.fromColors(
-                  baseColor: Colors.grey[300]!,
-                  highlightColor: Colors.grey[100]!,
-                  child: Container(color: Colors.white),
+              if (photo.thumbnailUrl != null || photo.isPhoto)
+                CachedNetworkImage(
+                  imageUrl: photo.displayUrl,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Shimmer.fromColors(
+                    baseColor: Colors.grey[300]!,
+                    highlightColor: Colors.grey[100]!,
+                    child: Container(color: Colors.white),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    color: Colors.grey[900],
+                    child: Icon(
+                      photo.isVideo ? Icons.videocam : Icons.broken_image,
+                      color: Colors.white70,
+                      size: 32,
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  color: Colors.grey[900],
+                  child: const Center(
+                    child: Icon(
+                      Icons.play_circle_fill,
+                      color: Colors.white70,
+                      size: 40,
+                    ),
+                  ),
                 ),
-                errorWidget: (context, url, error) => Container(
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.broken_image, color: Colors.grey),
+
+              // Video overlay & play icon
+              if (photo.isVideo) ...[
+                Container(
+                  color: Colors.black.withValues(alpha: 0.25),
                 ),
-              ),
+                const Center(
+                  child: Icon(
+                    Icons.play_circle_fill,
+                    size: 36,
+                    color: Colors.white,
+                  ),
+                ),
+                Positioned(
+                  bottom: 4,
+                  left: 4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.videocam, size: 12, color: Colors.white),
+                        if (photo.formattedDuration.isNotEmpty) ...[
+                          const SizedBox(width: 3),
+                          Text(
+                            photo.formattedDuration,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+
               // Featured star indicator
               if (photo.isFeatured)
                 Positioned(
@@ -473,7 +606,7 @@ class _PhotoGridTile extends StatelessWidget {
   }
 }
 
-// ─── Full-Screen Photo Viewer ───────────────────────────────────
+// ─── Full-Screen Photo & Video Viewer ───────────────────────────────────
 
 class _PhotoViewerScreen extends ConsumerStatefulWidget {
   final List<Photo> photos;
@@ -513,6 +646,19 @@ class _PhotoViewerScreenState extends ConsumerState<_PhotoViewerScreen> {
 
   Photo get _currentPhoto => widget.photos[_currentIndex];
 
+  Future<void> _launchVideo(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open video player')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isAdmin = ref.watch(isAdminProvider).valueOrNull ?? false;
@@ -527,6 +673,12 @@ class _PhotoViewerScreenState extends ConsumerState<_PhotoViewerScreen> {
           style: const TextStyle(color: Colors.white),
         ),
         actions: [
+          if (_currentPhoto.isVideo)
+            IconButton(
+              icon: const Icon(Icons.open_in_new, color: Colors.white),
+              onPressed: () => _launchVideo(_currentPhoto.url),
+              tooltip: 'Play in video player',
+            ),
           if (isAdmin) ...[
             IconButton(
               icon: Icon(
@@ -544,14 +696,14 @@ class _PhotoViewerScreenState extends ConsumerState<_PhotoViewerScreen> {
             IconButton(
               icon: const Icon(Icons.delete_outline, color: Colors.white),
               onPressed: () => _confirmDelete(),
-              tooltip: 'Delete photo',
+              tooltip: _currentPhoto.isVideo ? 'Delete video' : 'Delete photo',
             ),
           ],
         ],
       ),
       body: Stack(
         children: [
-          // Swipeable photos
+          // Swipeable media items
           PageView.builder(
             controller: _pageController,
             itemCount: widget.photos.length,
@@ -560,6 +712,62 @@ class _PhotoViewerScreenState extends ConsumerState<_PhotoViewerScreen> {
             },
             itemBuilder: (context, index) {
               final photo = widget.photos[index];
+
+              if (photo.isVideo) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () => _launchVideo(photo.url),
+                        child: Container(
+                          width: 90,
+                          height: 90,
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withValues(alpha: 0.8),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.5),
+                                blurRadius: 16,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.play_arrow_rounded,
+                            size: 60,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Video Media',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ElevatedButton.icon(
+                        onPressed: () => _launchVideo(photo.url),
+                        icon: const Icon(Icons.play_circle_fill),
+                        label: const Text('Play Video'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
               return InteractiveViewer(
                 child: Hero(
                   tag: 'photo_${photo.id}',

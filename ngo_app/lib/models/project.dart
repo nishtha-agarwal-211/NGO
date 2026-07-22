@@ -13,6 +13,7 @@ class Project {
   // Recurrence fields
   final int? recurrenceDayOfWeek;
   final String? recurrenceTime;
+  final String? recurrenceEndTime;
   final String? recurrenceLocation;
   // Campaign fields
   final String? goalDescription;
@@ -36,6 +37,7 @@ class Project {
     this.endDate,
     this.recurrenceDayOfWeek,
     this.recurrenceTime,
+    this.recurrenceEndTime,
     this.recurrenceLocation,
     this.goalDescription,
     this.targetAmount,
@@ -58,6 +60,7 @@ class Project {
       endDate: json['end_date'] != null ? DateTime.parse(json['end_date'] as String) : null,
       recurrenceDayOfWeek: json['recurrence_day_of_week'] as int?,
       recurrenceTime: json['recurrence_time'] as String?,
+      recurrenceEndTime: json['recurrence_end_time'] as String?,
       recurrenceLocation: json['recurrence_location'] as String?,
       goalDescription: json['goal_description'] as String?,
       targetAmount: (json['target_amount'] as num?)?.toDouble(),
@@ -78,6 +81,7 @@ class Project {
       'end_date': endDate?.toIso8601String().split('T').first,
       'recurrence_day_of_week': recurrenceDayOfWeek,
       'recurrence_time': recurrenceTime,
+      'recurrence_end_time': recurrenceEndTime,
       'recurrence_location': recurrenceLocation,
       'goal_description': goalDescription,
       'target_amount': targetAmount,
@@ -96,6 +100,7 @@ class Project {
     DateTime? endDate,
     int? recurrenceDayOfWeek,
     String? recurrenceTime,
+    String? recurrenceEndTime,
     String? recurrenceLocation,
     String? goalDescription,
     double? targetAmount,
@@ -116,6 +121,7 @@ class Project {
       endDate: endDate ?? this.endDate,
       recurrenceDayOfWeek: recurrenceDayOfWeek ?? this.recurrenceDayOfWeek,
       recurrenceTime: recurrenceTime ?? this.recurrenceTime,
+      recurrenceEndTime: recurrenceEndTime ?? this.recurrenceEndTime,
       recurrenceLocation: recurrenceLocation ?? this.recurrenceLocation,
       goalDescription: goalDescription ?? this.goalDescription,
       targetAmount: targetAmount ?? this.targetAmount,
@@ -132,9 +138,33 @@ class Project {
   String get recurrenceSummary {
     if (!isRecurring || recurrenceDayOfWeek == null) return '';
     final dayName = _dayName(recurrenceDayOfWeek!);
-    final time = recurrenceTime ?? '';
+    final startTimeStr = _formatTime(recurrenceTime);
+    final endTimeStr = _formatTime(recurrenceEndTime);
+    
+    String timePart = '';
+    if (startTimeStr.isNotEmpty && endTimeStr.isNotEmpty) {
+      timePart = ' at $startTimeStr – $endTimeStr';
+    } else if (startTimeStr.isNotEmpty) {
+      timePart = ' at $startTimeStr';
+    }
+
     final location = recurrenceLocation ?? '';
-    return 'Every $dayName${time.isNotEmpty ? ' at $time' : ''}${location.isNotEmpty ? ' · $location' : ''}';
+    return 'Every $dayName$timePart${location.isNotEmpty ? ' · $location' : ''}';
+  }
+
+  String _formatTime(String? timeStr) {
+    if (timeStr == null || timeStr.isEmpty) return '';
+    try {
+      final parts = timeStr.split(':');
+      if (parts.length >= 2) {
+        final hour = int.parse(parts[0]);
+        final minute = int.parse(parts[1]);
+        final period = hour >= 12 ? 'PM' : 'AM';
+        final h = hour % 12 == 0 ? 12 : hour % 12;
+        return '$h:${minute.toString().padLeft(2, '0')} $period';
+      }
+    } catch (_) {}
+    return timeStr;
   }
 
   String _dayName(int day) {

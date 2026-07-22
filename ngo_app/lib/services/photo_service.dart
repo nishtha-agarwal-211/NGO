@@ -1,5 +1,4 @@
-import 'dart:typed_data';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -54,16 +53,20 @@ class PhotoService {
     return (response as List).length;
   }
 
-  /// Delete a photo (removes from storage and database).
+  /// Delete a photo or video (removes from storage and database).
   Future<void> deletePhoto(Photo photo) async {
     // Remove from storage
     try {
+      final bucket = photo.isVideo
+          ? SupabaseConfig.eventVideosBucket
+          : SupabaseConfig.eventPhotosBucket;
+
       await _client.storage
-          .from(SupabaseConfig.eventPhotosBucket)
+          .from(bucket)
           .remove([photo.storagePath]);
       if (photo.thumbnailPath != null) {
         await _client.storage
-            .from(SupabaseConfig.eventPhotosBucket)
+            .from(bucket)
             .remove([photo.thumbnailPath!]);
       }
     } catch (_) {
@@ -90,7 +93,7 @@ class PhotoService {
         .eq('id', photoId);
   }
 
-  // ─── Photo Upload ─────────────────────────────────────────────
+  // ─── Photo / Video Upload ─────────────────────────────────────────────
 
   /// Pick an image from camera or gallery.
   Future<XFile?> pickImage({required ImageSource source}) async {
@@ -100,6 +103,15 @@ class PhotoService {
       maxWidth: AppConstants.fullImageMaxWidth.toDouble(),
       maxHeight: AppConstants.fullImageMaxHeight.toDouble(),
       imageQuality: AppConstants.imageQuality,
+    );
+  }
+
+  /// Pick a video from camera or gallery.
+  Future<XFile?> pickVideo({required ImageSource source}) async {
+    final picker = ImagePicker();
+    return await picker.pickVideo(
+      source: source,
+      maxDuration: Duration(seconds: AppConstants.videoMaxDurationSeconds),
     );
   }
 
@@ -113,28 +125,42 @@ class PhotoService {
     );
   }
 
-  /// Compress image file and return compressed bytes.
-  Future<Uint8List?> _compressImage(String filePath) async {
-    final result = await FlutterImageCompress.compressWithFile(
-      filePath,
-      minWidth: AppConstants.fullImageMaxWidth,
-      minHeight: AppConstants.fullImageMaxHeight,
-      quality: AppConstants.imageQuality,
-      format: CompressFormat.jpeg,
-    );
-    return result;
+  /// Compress or read image file bytes (with safe web fallback).
+  Future<Uint8List> _getImageBytes(XFile file) async {
+    if (!kIsWeb) {
+      try {
+        final result = await FlutterImageCompress.compressWithFile(
+          file.path,
+          minWidth: AppConstants.fullImageMaxWidth,
+          minHeight: AppConstants.fullImageMaxHeight,
+          quality: AppConstants.imageQuality,
+          format: CompressFormat.jpeg,
+        );
+        if (result != null) return result;
+      } catch (_) {
+        // Fallback to readAsBytes on error
+      }
+    }
+    return await file.readAsBytes();
   }
 
-  /// Generate thumbnail from image file.
-  Future<Uint8List?> _generateThumbnail(String filePath) async {
-    final result = await FlutterImageCompress.compressWithFile(
-      filePath,
-      minWidth: AppConstants.thumbnailWidth,
-      minHeight: AppConstants.thumbnailHeight,
-      quality: AppConstants.thumbnailQuality,
-      format: CompressFormat.jpeg,
-    );
-    return result;
+  /// Generate thumbnail from image file (with safe web fallback).
+  Future<Uint8List?> _generateThumbnail(XFile file) async {
+    if (!kIsWeb) {
+      try {
+        final result = await FlutterImageCompress.compressWithFile(
+          file.path,
+          minWidth: AppConstants.thumbnailWidth,
+          minHeight: AppConstants.thumbnailHeight,
+          quality: AppConstants.thumbnailQuality,
+          format: CompressFormat.jpeg,
+        );
+        if (result != null) return result;
+      } catch (_) {
+        // Fallback
+      }
+    }
+    return null;
   }
 
   /// Upload a photo: compress, generate thumbnail, upload to storage, insert DB row.
@@ -142,21 +168,18 @@ class PhotoService {
   Future<Photo> uploadPhoto({
     required String eventId,
     required String projectId,
-    required String filePath,
+    required XFile file,
     String? caption,
   }) async {
     final photoId = _uuid.v4();
     final storagePath = SupabaseConfig.eventPhotoPath(projectId, eventId, photoId);
     final thumbnailStoragePath = SupabaseConfig.eventThumbnailPath(projectId, eventId, photoId);
 
-    // Compress original image
-    final compressedBytes = await _compressImage(filePath);
-    if (compressedBytes == null) {
-      throw Exception('Failed to compress image');
-    }
+    // Compress or read original image bytes
+    final compressedBytes = await _getImageBytes(file);
 
     // Generate thumbnail
-    final thumbnailBytes = await _generateThumbnail(filePath);
+    final thumbnailBytes = await _generateThumbnail(file);
 
     // Upload original
     await _client.storage
@@ -174,23 +197,25 @@ class PhotoService {
         .from(SupabaseConfig.eventPhotosBucket)
         .getPublicUrl(storagePath);
 
-    // Upload thumbnail
+    // Upload thumbnail if available
     String? thumbnailUrl;
     if (thumbnailBytes != null) {
-      await _client.storage
-          .from(SupabaseConfig.eventPhotosBucket)
-          .uploadBinary(
-            thumbnailStoragePath,
-            thumbnailBytes,
-            fileOptions: const FileOptions(
-              contentType: 'image/jpeg',
-              upsert: true,
-            ),
-          );
+      try {
+        await _client.storage
+            .from(SupabaseConfig.eventPhotosBucket)
+            .uploadBinary(
+              thumbnailStoragePath,
+              thumbnailBytes,
+              fileOptions: const FileOptions(
+                contentType: 'image/jpeg',
+                upsert: true,
+              ),
+            );
 
-      thumbnailUrl = _client.storage
-          .from(SupabaseConfig.eventPhotosBucket)
-          .getPublicUrl(thumbnailStoragePath);
+        thumbnailUrl = _client.storage
+            .from(SupabaseConfig.eventPhotosBucket)
+            .getPublicUrl(thumbnailStoragePath);
+      } catch (_) {}
     }
 
     // Insert database record
@@ -206,6 +231,65 @@ class PhotoService {
           'caption': caption,
           'is_featured': false,
           'uploaded_by': userId,
+          'media_type': 'photo',
+          'content_type': 'image/jpeg',
+        })
+        .select()
+        .single();
+
+    return Photo.fromJson(response);
+  }
+
+  /// Upload a video: upload binary to storage and insert DB row.
+  Future<Photo> uploadVideo({
+    required String eventId,
+    required String projectId,
+    required XFile videoFile,
+    String? caption,
+  }) async {
+    final videoId = _uuid.v4();
+    final storagePath = SupabaseConfig.eventVideoPath(projectId, eventId, videoId);
+    final bytes = await videoFile.readAsBytes();
+
+    // Determine bucket (try eventVideosBucket first, fallback to eventPhotosBucket if needed)
+    String bucketName = SupabaseConfig.eventVideosBucket;
+
+    try {
+      await _client.storage.from(bucketName).uploadBinary(
+            storagePath,
+            bytes,
+            fileOptions: const FileOptions(
+              contentType: 'video/mp4',
+              upsert: true,
+            ),
+          );
+    } catch (_) {
+      // Fallback to eventPhotosBucket if eventVideosBucket is not configured on server
+      bucketName = SupabaseConfig.eventPhotosBucket;
+      await _client.storage.from(bucketName).uploadBinary(
+            storagePath,
+            bytes,
+            fileOptions: const FileOptions(
+              contentType: 'video/mp4',
+              upsert: true,
+            ),
+          );
+    }
+
+    final url = _client.storage.from(bucketName).getPublicUrl(storagePath);
+    final userId = _client.auth.currentUser?.id;
+
+    final response = await _client
+        .from(AppConstants.photosTable)
+        .insert({
+          'event_id': eventId,
+          'storage_path': storagePath,
+          'url': url,
+          'caption': caption,
+          'is_featured': false,
+          'uploaded_by': userId,
+          'media_type': 'video',
+          'content_type': 'video/mp4',
         })
         .select()
         .single();
@@ -218,12 +302,12 @@ class PhotoService {
   Stream<PhotoUploadProgress> uploadMultiplePhotos({
     required String eventId,
     required String projectId,
-    required List<String> filePaths,
+    required List<XFile> files,
   }) async* {
-    for (var i = 0; i < filePaths.length; i++) {
+    for (var i = 0; i < files.length; i++) {
       yield PhotoUploadProgress(
         current: i,
-        total: filePaths.length,
+        total: files.length,
         status: UploadStatus.uploading,
       );
 
@@ -231,18 +315,18 @@ class PhotoService {
         await uploadPhoto(
           eventId: eventId,
           projectId: projectId,
-          filePath: filePaths[i],
+          file: files[i],
         );
 
         yield PhotoUploadProgress(
           current: i + 1,
-          total: filePaths.length,
+          total: files.length,
           status: UploadStatus.uploading,
         );
       } catch (e) {
         yield PhotoUploadProgress(
           current: i,
-          total: filePaths.length,
+          total: files.length,
           status: UploadStatus.error,
           errorMessage: 'Failed to upload photo ${i + 1}: $e',
         );
@@ -250,8 +334,8 @@ class PhotoService {
     }
 
     yield PhotoUploadProgress(
-      current: filePaths.length,
-      total: filePaths.length,
+      current: files.length,
+      total: files.length,
       status: UploadStatus.completed,
     );
   }

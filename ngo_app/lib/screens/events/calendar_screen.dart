@@ -292,7 +292,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   Widget _buildEventCard(Event event) {
-    final statusColor = _getStatusColor(event.status);
+    final effectiveStatus = event.effectiveStatus;
+    final statusColor = _getStatusColor(effectiveStatus);
+    final timeDisplay = event.formattedTimeRange.isNotEmpty
+        ? event.formattedTimeRange
+        : (event.eventTime != null ? _formatTime(event.eventTime!) : '');
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -359,7 +363,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               ),
                             ),
                           ],
-                          if (event.eventTime != null) ...[
+                          if (timeDisplay.isNotEmpty) ...[
                             const SizedBox(width: 12),
                             Icon(
                               Icons.access_time,
@@ -368,7 +372,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              _formatTime(event.eventTime!),
+                              timeDisplay,
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 color: AppTheme.textSecondary,
@@ -411,7 +415,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    event.status.displayName,
+                    effectiveStatus.displayName,
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,

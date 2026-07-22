@@ -655,12 +655,14 @@ class _EventCard extends StatelessWidget {
                     ),
                   ),
                 ],
-                if (event.eventTime != null) ...[
+                if (event.formattedTimeRange.isNotEmpty || event.eventTime != null) ...[
                   const SizedBox(width: 8),
                   Icon(Icons.access_time, size: 14, color: AppTheme.textHint),
                   const SizedBox(width: 2),
                   Text(
-                    event.eventTime!,
+                    event.formattedTimeRange.isNotEmpty
+                        ? event.formattedTimeRange
+                        : event.eventTime!,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppTheme.textHint,
                           fontSize: 11,

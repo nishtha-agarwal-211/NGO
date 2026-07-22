@@ -39,10 +39,11 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
   DateTime? _endDate;
   int? _recurrenceDayOfWeek;
   TimeOfDay? _recurrenceTime;
+  TimeOfDay? _recurrenceEndTime;
 
   bool _isSaving = false;
   bool _isLoaded = false;
-
+  
   // Category suggestions
   static const _categories = [
     'Food',
@@ -91,6 +92,15 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
       final parts = project.recurrenceTime!.split(':');
       if (parts.length >= 2) {
         _recurrenceTime = TimeOfDay(
+          hour: int.parse(parts[0]),
+          minute: int.parse(parts[1]),
+        );
+      }
+    }
+    if (project.recurrenceEndTime != null) {
+      final parts = project.recurrenceEndTime!.split(':');
+      if (parts.length >= 2) {
+        _recurrenceEndTime = TimeOfDay(
           hour: int.parse(parts[0]),
           minute: int.parse(parts[1]),
         );
@@ -327,27 +337,64 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Time
-                    InkWell(
-                      onTap: _pickRecurrenceTime,
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.radiusMedium),
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                          labelText: 'Time',
-                          prefixIcon: Icon(Icons.access_time),
-                        ),
-                        child: Text(
-                          _recurrenceTime != null
-                              ? _recurrenceTime!.format(context)
-                              : 'Select time',
-                          style: GoogleFonts.inter(
-                            color: _recurrenceTime != null
-                                ? AppTheme.textPrimary
-                                : AppTheme.textHint,
+                    // Start Time and End Time
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () => _pickRecurrenceTime(isStart: true),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMedium),
+                            child: InputDecorator(
+                              decoration: const InputDecoration(
+                                labelText: 'Start Time',
+                                prefixIcon: Icon(Icons.access_time),
+                              ),
+                              child: Text(
+                                _recurrenceTime != null
+                                    ? _recurrenceTime!.format(context)
+                                    : 'Select time',
+                                style: GoogleFonts.inter(
+                                  color: _recurrenceTime != null
+                                      ? AppTheme.textPrimary
+                                      : AppTheme.textHint,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () => _pickRecurrenceTime(isStart: false),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMedium),
+                            child: InputDecorator(
+                              decoration: InputDecoration(
+                                labelText: 'End Time',
+                                prefixIcon: const Icon(Icons.access_time_filled),
+                                suffixIcon: _recurrenceEndTime != null
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear, size: 18),
+                                        onPressed: () => setState(
+                                            () => _recurrenceEndTime = null),
+                                      )
+                                    : null,
+                              ),
+                              child: Text(
+                                _recurrenceEndTime != null
+                                    ? _recurrenceEndTime!.format(context)
+                                    : 'Select time',
+                                style: GoogleFonts.inter(
+                                  color: _recurrenceEndTime != null
+                                      ? AppTheme.textPrimary
+                                      : AppTheme.textHint,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
 
@@ -573,13 +620,22 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
     }
   }
 
-  Future<void> _pickRecurrenceTime() async {
+  Future<void> _pickRecurrenceTime({required bool isStart}) async {
+    final initial = isStart
+        ? (_recurrenceTime ?? const TimeOfDay(hour: 9, minute: 0))
+        : (_recurrenceEndTime ?? _recurrenceTime ?? const TimeOfDay(hour: 17, minute: 0));
     final picked = await showTimePicker(
       context: context,
-      initialTime: _recurrenceTime ?? const TimeOfDay(hour: 9, minute: 0),
+      initialTime: initial,
     );
     if (picked != null) {
-      setState(() => _recurrenceTime = picked);
+      setState(() {
+        if (isStart) {
+          _recurrenceTime = picked;
+        } else {
+          _recurrenceEndTime = picked;
+        }
+      });
     }
   }
 
@@ -593,6 +649,9 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
 
       final timeStr = _recurrenceTime != null
           ? '${_recurrenceTime!.hour.toString().padLeft(2, '0')}:${_recurrenceTime!.minute.toString().padLeft(2, '0')}:00'
+          : null;
+      final endTimeStr = _recurrenceEndTime != null
+          ? '${_recurrenceEndTime!.hour.toString().padLeft(2, '0')}:${_recurrenceEndTime!.minute.toString().padLeft(2, '0')}:00'
           : null;
 
       final now = DateTime.now();
@@ -613,6 +672,8 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
             _projectType == ProjectType.recurring ? _recurrenceDayOfWeek : null,
         recurrenceTime:
             _projectType == ProjectType.recurring ? timeStr : null,
+        recurrenceEndTime:
+            _projectType == ProjectType.recurring ? endTimeStr : null,
         recurrenceLocation:
             _projectType == ProjectType.recurring &&
                     _recurrenceLocationController.text.trim().isNotEmpty

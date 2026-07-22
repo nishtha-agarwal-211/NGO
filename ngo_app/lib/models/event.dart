@@ -7,6 +7,7 @@ class Event {
   final String? title;
   final DateTime eventDate;
   final String? eventTime;
+  final String? eventEndTime;
   final String? location;
   final int beneficiaryCount;
   final String? beneficiaryDetails;
@@ -27,6 +28,7 @@ class Event {
     this.title,
     required this.eventDate,
     this.eventTime,
+    this.eventEndTime,
     this.location,
     this.beneficiaryCount = 0,
     this.beneficiaryDetails,
@@ -47,6 +49,7 @@ class Event {
       title: json['title'] as String?,
       eventDate: DateTime.parse(json['event_date'] as String),
       eventTime: json['event_time'] as String?,
+      eventEndTime: json['event_end_time'] as String? ?? json['end_time'] as String?,
       location: json['location'] as String?,
       beneficiaryCount: json['beneficiary_count'] as int? ?? 0,
       beneficiaryDetails: json['beneficiary_details'] as String?,
@@ -64,6 +67,7 @@ class Event {
       'title': title,
       'event_date': eventDate.toIso8601String().split('T').first,
       'event_time': eventTime,
+      'event_end_time': eventEndTime,
       'location': location,
       'beneficiary_count': beneficiaryCount,
       'beneficiary_details': beneficiaryDetails,
@@ -78,6 +82,7 @@ class Event {
     String? title,
     DateTime? eventDate,
     String? eventTime,
+    String? eventEndTime,
     String? location,
     int? beneficiaryCount,
     String? beneficiaryDetails,
@@ -96,6 +101,7 @@ class Event {
       title: title ?? this.title,
       eventDate: eventDate ?? this.eventDate,
       eventTime: eventTime ?? this.eventTime,
+      eventEndTime: eventEndTime ?? this.eventEndTime,
       location: location ?? this.location,
       beneficiaryCount: beneficiaryCount ?? this.beneficiaryCount,
       beneficiaryDetails: beneficiaryDetails ?? this.beneficiaryDetails,
@@ -119,7 +125,64 @@ class Event {
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 
-  bool get isUpcoming => status == EventStatus.upcoming;
-  bool get isCompleted => status == EventStatus.completed;
-  bool get isPast => eventDate.isBefore(DateTime.now());
+  /// Calculated exact end DateTime for status checks.
+  DateTime get endDateTime {
+    final timeToParse = eventEndTime ?? eventTime;
+    if (timeToParse != null && timeToParse.isNotEmpty) {
+      try {
+        final parts = timeToParse.split(':');
+        if (parts.length >= 2) {
+          final h = int.parse(parts[0]);
+          final m = int.parse(parts[1]);
+          return DateTime(eventDate.year, eventDate.month, eventDate.day, h, m);
+        }
+      } catch (_) {}
+    }
+    // Default to end of event date if no valid time
+    return DateTime(eventDate.year, eventDate.month, eventDate.day, 23, 59, 59);
+  }
+
+  /// True if the event end time or date has passed.
+  bool get hasEnded => endDateTime.isBefore(DateTime.now());
+
+  /// Effective status — if explicitly marked upcoming but end time has passed, treat as completed.
+  EventStatus get effectiveStatus {
+    if (status == EventStatus.upcoming && hasEnded) {
+      return EventStatus.completed;
+    }
+    return status;
+  }
+
+  bool get isUpcoming => effectiveStatus == EventStatus.upcoming;
+  bool get isCompleted => effectiveStatus == EventStatus.completed;
+  bool get isPast => hasEnded;
+
+  /// Formatted time string range (e.g. "11:45 AM - 1:45 PM" or "11:45 AM").
+  String get formattedTimeRange {
+    final startStr = _formatSingleTime(eventTime);
+    final endStr = _formatSingleTime(eventEndTime);
+    if (startStr.isNotEmpty && endStr.isNotEmpty) {
+      return '$startStr – $endStr';
+    } else if (startStr.isNotEmpty) {
+      return startStr;
+    } else if (endStr.isNotEmpty) {
+      return 'Until $endStr';
+    }
+    return '';
+  }
+
+  String _formatSingleTime(String? timeStr) {
+    if (timeStr == null || timeStr.isEmpty) return '';
+    try {
+      final parts = timeStr.split(':');
+      if (parts.length >= 2) {
+        final hour = int.parse(parts[0]);
+        final minute = int.parse(parts[1]);
+        final period = hour >= 12 ? 'PM' : 'AM';
+        final h = hour % 12 == 0 ? 12 : hour % 12;
+        return '$h:${minute.toString().padLeft(2, '0')} $period';
+      }
+    } catch (_) {}
+    return timeStr;
+  }
 }
