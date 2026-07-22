@@ -22,7 +22,20 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: Row(
+          children: [
+            ClipOval(
+              child: Image.asset(
+                'assets/images/logo.jpg',
+                width: 36,
+                height: 36,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text('श्री श्याम सेवा समिति'),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.calendar_month_outlined),

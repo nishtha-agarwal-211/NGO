@@ -93,7 +93,7 @@ class _NgoAppState extends ConsumerState<NgoApp> {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      title: 'NGO Manager',
+      title: 'श्री श्याम सेवा समिति',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

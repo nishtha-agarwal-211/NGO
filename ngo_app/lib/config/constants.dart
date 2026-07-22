@@ -3,7 +3,9 @@ class AppConstants {
   AppConstants._();
 
   // App Info
-  static const String appName = 'NGO Manager';
+  static const String appName = 'Shree Shyam Seva Samiti';
+  static const String appNameHindi = 'श्री श्याम सेवा समिति';
+  static const String tagline = 'नर सेवा, नारायण सेवा';
   static const String appVersion = '1.0.0';
 
   // Reminder Settings

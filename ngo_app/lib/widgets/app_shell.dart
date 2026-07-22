@@ -97,9 +97,9 @@ class _AppShellState extends ConsumerState<AppShell> {
         label: 'Donors',
       ),
       const BottomNavigationBarItem(
-        icon: Icon(Icons.folder_outlined),
-        activeIcon: Icon(Icons.folder),
-        label: 'Projects',
+        icon: Icon(Icons.event_outlined),
+        activeIcon: Icon(Icons.event),
+        label: 'Events',
       ),
       const BottomNavigationBarItem(
         icon: Icon(Icons.newspaper_outlined),

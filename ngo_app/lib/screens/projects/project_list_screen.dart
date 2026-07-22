@@ -10,7 +10,9 @@ import '../../models/enums.dart';
 import '../../services/project_service.dart';
 import '../../services/auth_service.dart';
 
-/// Project list screen with status badges, category chips, and filters.
+/// Events screen — shows project categories as folder cards.
+/// Each card represents a category (e.g., Wednesday Food Donation, Health Camps).
+/// Tapping a card opens the date-wise folder view for that category.
 class ProjectListScreen extends ConsumerStatefulWidget {
   const ProjectListScreen({super.key});
 
@@ -67,7 +69,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
                 onChanged: _onSearchChanged,
                 style: GoogleFonts.inter(fontSize: 16),
                 decoration: InputDecoration(
-                  hintText: 'Search projects...',
+                  hintText: 'Search events...',
                   hintStyle: GoogleFonts.inter(color: AppTheme.textHint),
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
@@ -76,7 +78,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
                   filled: true,
                 ),
               )
-            : const Text('Projects'),
+            : const Text('Events'),
         actions: [
           IconButton(
             icon: Icon(_showSearch ? Icons.close : Icons.search),
@@ -132,7 +134,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
         ],
       ),
       body: projectListAsync.when(
-        data: (projects) => _buildProjectList(projects),
+        data: (projects) => _buildCategoryGrid(projects),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Column(
@@ -155,30 +157,30 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
           ? FloatingActionButton.extended(
               onPressed: () => context.push(AppRoutes.projectAdd),
               icon: const Icon(Icons.add),
-              label: const Text('Add Project'),
+              label: const Text('Add Category'),
             )
           : null,
     );
   }
 
-  Widget _buildProjectList(List<Project> projects) {
+  Widget _buildCategoryGrid(List<Project> projects) {
     if (projects.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 80, height: 80,
+              width: 88, height: 88,
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
+                color: AppTheme.primaryColor.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(24),
               ),
-              child: const Icon(Icons.folder_outlined, size: 40, color: AppTheme.primaryColor),
+              child: const Icon(Icons.event_note_outlined, size: 44, color: AppTheme.primaryColor),
             ),
             const SizedBox(height: 24),
-            Text('No projects yet', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w600)),
+            Text('No event categories yet', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            Text('Create your first project to get started',
+            Text('Create your first category to get started',
                 style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textSecondary)),
           ],
         ),
@@ -188,41 +190,13 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
     return RefreshIndicator(
       onRefresh: () async => ref.invalidate(projectListProvider),
       child: ListView.builder(
-        padding: const EdgeInsets.only(top: 8, bottom: 88),
-        itemCount: projects.length + 1,
+        padding: const EdgeInsets.only(top: 12, bottom: 88, left: 16, right: 16),
+        itemCount: projects.length,
         itemBuilder: (context, index) {
-          if (index == 0) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '${projects.length} project${projects.length == 1 ? '' : 's'}',
-                      style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.primaryColor),
-                    ),
-                  ),
-                  if (_statusFilter != null) ...[
-                    const SizedBox(width: 8),
-                    Chip(
-                      label: Text(_statusFilter!.displayName),
-                      onDeleted: () { setState(() => _statusFilter = null); ref.invalidate(projectListProvider); },
-                      deleteIcon: const Icon(Icons.close, size: 16),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  ],
-                ],
-              ),
-            );
-          }
-          return _ProjectCard(
-            project: projects[index - 1],
-            onTap: () => context.push('/projects/${projects[index - 1].id}'),
+          return _CategoryFolderCard(
+            project: projects[index],
+            colorIndex: index,
+            onTap: () => context.push('/projects/${projects[index].id}/events'),
           );
         },
       ),
@@ -246,91 +220,191 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
   }
 }
 
-class _ProjectCard extends StatelessWidget {
+/// Category icons mapped to common NGO activity types.
+IconData _categoryIcon(String? category, bool isRecurring) {
+  if (category == null) return isRecurring ? Icons.repeat : Icons.event;
+  switch (category.toLowerCase()) {
+    case 'food':
+      return Icons.restaurant_outlined;
+    case 'education':
+      return Icons.school_outlined;
+    case 'medical':
+    case 'health':
+      return Icons.local_hospital_outlined;
+    case 'environment':
+      return Icons.eco_outlined;
+    case 'women empowerment':
+      return Icons.female_outlined;
+    case 'child welfare':
+      return Icons.child_care_outlined;
+    case 'community':
+      return Icons.groups_outlined;
+    case 'infrastructure':
+      return Icons.construction_outlined;
+    default:
+      return isRecurring ? Icons.repeat : Icons.event;
+  }
+}
+
+/// Rich color palette for category cards.
+const _categoryColors = [
+  Color(0xFF8B1A1A),  // Deep maroon
+  Color(0xFF1565C0),  // Blue
+  Color(0xFF2E7D32),  // Green
+  Color(0xFFE65100),  // Deep orange
+  Color(0xFF6A1B9A),  // Purple
+  Color(0xFF00695C),  // Teal
+  Color(0xFFC62828),  // Red
+  Color(0xFF283593),  // Indigo
+  Color(0xFF4E342E),  // Brown
+  Color(0xFF00838F),  // Cyan
+];
+
+class _CategoryFolderCard extends StatelessWidget {
   final Project project;
+  final int colorIndex;
   final VoidCallback onTap;
 
-  const _ProjectCard({required this.project, required this.onTap});
+  const _CategoryFolderCard({
+    required this.project,
+    required this.colorIndex,
+    required this.onTap,
+  });
+
+  Color get _cardColor => _categoryColors[colorIndex % _categoryColors.length];
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
           child: Container(
-            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-              border: Border.all(color: Colors.grey.withValues(alpha: 0.08)),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  _cardColor,
+                  _cardColor.withValues(alpha: 0.8),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _cardColor.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Stack(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 44, height: 44,
-                      decoration: BoxDecoration(
-                        color: _statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        project.isRecurring ? Icons.repeat : Icons.trending_up,
-                        color: _statusColor, size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                // Background folder pattern
+                Positioned(
+                  right: -20,
+                  bottom: -15,
+                  child: Icon(
+                    Icons.folder_open,
+                    size: 120,
+                    color: Colors.white.withValues(alpha: 0.08),
+                  ),
+                ),
+                // Content
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Text(
-                            project.name,
-                            style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          if (project.description != null)
-                            Text(
-                              project.description!,
-                              style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                          // Category icon
+                          Container(
+                            width: 48, height: 48,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(14),
                             ),
+                            child: Icon(
+                              _categoryIcon(project.category, project.isRecurring),
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  project.name,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (project.description != null) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    project.description!,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 13,
+                                      color: Colors.white.withValues(alpha: 0.75),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          // Arrow
+                          Container(
+                            width: 36, height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.arrow_forward_ios,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                    _buildStatusBadge(),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                // Bottom row: category, type, recurrence
-                Row(
-                  children: [
-                    if (project.category != null) ...[
-                      _buildChip(project.category!, AppTheme.secondaryColor),
-                      const SizedBox(width: 8),
-                    ],
-                    _buildChip(project.projectType.displayName, AppTheme.primaryColor),
-                    if (project.isRecurring && project.recurrenceSummary.isNotEmpty) ...[
-                      const Spacer(),
-                      Icon(Icons.schedule, size: 14, color: AppTheme.textHint),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          project.recurrenceSummary,
-                          style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textHint),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                      const SizedBox(height: 16),
+                      // Bottom info row
+                      Row(
+                        children: [
+                          // Status badge
+                          _buildBadge(
+                            project.status.displayName,
+                            icon: _statusIcon(project.status),
+                          ),
+                          const SizedBox(width: 8),
+                          // Type badge
+                          if (project.isRecurring) ...[
+                            _buildBadge(
+                              project.recurrenceSummary.isNotEmpty
+                                  ? project.recurrenceSummary
+                                  : 'Recurring',
+                              icon: Icons.repeat,
+                            ),
+                          ] else ...[
+                            if (project.category != null)
+                              _buildBadge(project.category!, icon: Icons.label_outline),
+                          ],
+                        ],
                       ),
                     ],
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -340,39 +414,42 @@ class _ProjectCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge() {
+  Widget _buildBadge(String label, {IconData? icon}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: _statusColor.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(6),
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(
-        project.status.displayName,
-        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: _statusColor),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 13, color: Colors.white.withValues(alpha: 0.9)),
+            const SizedBox(width: 5),
+          ],
+          Flexible(
+            child: Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: Colors.white.withValues(alpha: 0.9),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildChip(String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        label,
-        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500, color: color),
-      ),
-    );
-  }
-
-  Color get _statusColor {
-    switch (project.status) {
-      case ProjectStatus.active: return AppTheme.successColor;
-      case ProjectStatus.completed: return AppTheme.primaryColor;
-      case ProjectStatus.paused: return AppTheme.warningColor;
+  IconData _statusIcon(ProjectStatus status) {
+    switch (status) {
+      case ProjectStatus.active: return Icons.circle;
+      case ProjectStatus.completed: return Icons.check_circle;
+      case ProjectStatus.paused: return Icons.pause_circle;
     }
   }
 }

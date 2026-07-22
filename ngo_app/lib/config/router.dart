@@ -16,6 +16,7 @@ import '../screens/projects/project_form_screen.dart';
 import '../screens/events/event_detail_screen.dart';
 import '../screens/events/event_form_screen.dart';
 import '../screens/events/calendar_screen.dart';
+import '../screens/events/event_folder_screen.dart';
 import '../screens/news/news_list_screen.dart';
 import '../screens/news/news_detail_screen.dart';
 import '../screens/news/news_form_screen.dart';
@@ -47,6 +48,7 @@ class AppRoutes {
   static const String newsAdd = '/news/add';
   static const String newsEdit = '/news/:id/edit';
   static const String photoGallery = '/events/:id/photos';
+  static const String eventFolder = '/projects/:id/events';
 }
 
 /// GoRouter configuration with auth redirect.
@@ -161,6 +163,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.projectDetail,
         builder: (context, state) => ProjectDetailScreen(
+          projectId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.eventFolder,
+        builder: (context, state) => EventFolderScreen(
           projectId: state.pathParameters['id']!,
         ),
       ),

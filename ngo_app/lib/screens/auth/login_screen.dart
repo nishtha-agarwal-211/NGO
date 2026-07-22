@@ -125,27 +125,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     children: [
                       // Logo / App Name
                       Container(
-                        width: 80,
-                        height: 80,
+                        width: 110,
+                        height: 110,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.favorite_rounded,
-                          size: 40,
                           color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 20,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: Image.asset(
+                            'assets/images/logo.jpg',
+                            width: 110,
+                            height: 110,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
                       const SizedBox(height: AppTheme.spacingMD),
                       Text(
-                        'NGO Manager',
+                        'श्री श्याम सेवा समिति',
                         style: GoogleFonts.inter(
-                          fontSize: 28,
+                          fontSize: 26,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
                           letterSpacing: -0.5,
@@ -153,10 +159,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       ),
                       const SizedBox(height: AppTheme.spacingXS),
                       Text(
-                        'Manage your community with ease',
+                        'नर सेवा, नारायण सेवा',
                         style: GoogleFonts.inter(
-                          fontSize: 14,
-                          color: Colors.white.withValues(alpha: 0.7),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withValues(alpha: 0.85),
+                          letterSpacing: 0.5,
                         ),
                       ),
                       const SizedBox(height: AppTheme.spacingXL),
