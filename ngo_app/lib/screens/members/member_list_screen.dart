@@ -10,6 +10,7 @@ import '../../models/member.dart';
 import '../../models/enums.dart';
 import '../../services/member_service.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/shimmer_widgets.dart';
 
 /// Member list screen with search, filter, and rich member cards.
 class MemberListScreen extends ConsumerStatefulWidget {
@@ -200,23 +201,7 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
   }
 
   Widget _buildLoadingState() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: 6,
-      itemBuilder: (context, index) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Container(
-          height: 88,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-          ),
-          child: const Center(
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      ),
-    );
+    return const ShimmerLoadingList();
   }
 
   Widget _buildErrorState(Object error) {

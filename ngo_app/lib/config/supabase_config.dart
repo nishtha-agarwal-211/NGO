@@ -1,17 +1,28 @@
 /// Supabase configuration constants.
-/// 
-/// IMPORTANT: Replace these with your actual Supabase project credentials.
-/// You can find these in your Supabase Dashboard > Settings > API.
+///
+/// Credentials are read from `--dart-define` at build time so you can
+/// swap dev / staging / prod without editing source code:
+///
+/// ```
+/// flutter run --dart-define=SUPABASE_URL=https://… --dart-define=SUPABASE_ANON_KEY=…
+/// ```
+///
+/// The current values serve as **fallback defaults** for local development.
 class SupabaseConfig {
   SupabaseConfig._();
 
-  /// Your Supabase project URL
-  /// Example: https://xyzcompanyid.supabase.co
-  static const String supabaseUrl = 'https://mwzxaiqcgujcgvbslypq.supabase.co';
+  /// Your Supabase project URL (overridable via `--dart-define=SUPABASE_URL=…`)
+  static const String supabaseUrl = String.fromEnvironment(
+    'SUPABASE_URL',
+    defaultValue: 'https://mwzxaiqcgujcgvbslypq.supabase.co',
+  );
 
   /// Your Supabase anonymous (public) key
-  /// This is safe to use in client-side code as RLS protects your data.
-  static const String supabaseAnonKey = 'sb_publishable_efra7-8leY8sgMVNwXNG_Q_1zXh5sz-';
+  /// (overridable via `--dart-define=SUPABASE_ANON_KEY=…`)
+  static const String supabaseAnonKey = String.fromEnvironment(
+    'SUPABASE_ANON_KEY',
+    defaultValue: 'sb_publishable_efra7-8leY8sgMVNwXNG_Q_1zXh5sz-',
+  );
 
   // Storage bucket names
   static const String eventPhotosBucket = 'event-photos';

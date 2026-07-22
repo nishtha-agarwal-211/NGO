@@ -328,7 +328,7 @@ class PhotoService {
           current: i,
           total: files.length,
           status: UploadStatus.error,
-          errorMessage: 'Failed to upload photo ${i + 1}: $e',
+          errorMessage: 'Failed to upload photo ${i + 1}. Please try again.',
         );
       }
     }

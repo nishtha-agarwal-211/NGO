@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../config/theme.dart';
 import '../../services/auth_service.dart';
+import '../../utils/error_utils.dart';
 
 /// Login screen — email + password authentication.
 class LoginScreen extends ConsumerStatefulWidget {
@@ -83,14 +84,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   }
 
   String _getErrorMessage(dynamic error) {
-    final msg = error.toString().toLowerCase();
-    if (msg.contains('invalid login credentials') || msg.contains('invalid_credentials')) {
-      return 'Invalid email or password. Please try again.';
-    }
-    if (msg.contains('network') || msg.contains('socket')) {
-      return 'Network error. Please check your internet connection.';
-    }
-    return 'Login failed. Please try again.';
+    return ErrorUtils.friendlyMessage(error);
   }
 
   @override

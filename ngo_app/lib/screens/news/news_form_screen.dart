@@ -9,6 +9,7 @@ import '../../models/news_item.dart';
 import '../../models/enums.dart';
 import '../../services/news_service.dart';
 import '../../services/project_service.dart';
+import '../../utils/error_utils.dart';
 
 
 /// News form screen — admin-only, for creating/editing news items.
@@ -37,6 +38,7 @@ class _NewsFormScreenState extends ConsumerState<NewsFormScreen> {
   String? _linkedProjectId;
   String? _clippingImageUrl;
   String? _clippingStoragePath;
+  XFile? _pendingClippingFile;
   bool _isSaving = false;
   bool _isLoading = false;
 
@@ -81,12 +83,7 @@ class _NewsFormScreenState extends ConsumerState<NewsFormScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to load news item: $e'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        ErrorUtils.showErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -362,24 +359,20 @@ class _NewsFormScreenState extends ConsumerState<NewsFormScreen> {
       try {
         final url = await ref
             .read(newsServiceProvider)
-            .uploadClippingImage(widget.newsId!, xFile.path);
+            .uploadClippingImage(widget.newsId!, xFile);
         setState(() {
           _clippingImageUrl = url;
         });
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to upload image: $e'),
-              backgroundColor: AppTheme.errorColor,
-            ),
-          );
+          ErrorUtils.showErrorSnackBar(context, e);
         }
       }
     } else {
-      // Store path temporarily — will upload after news item is created
+      // Store XFile temporarily — will upload after news item is created
       setState(() {
-        _clippingImageUrl = xFile.path; // temp local path
+        _pendingClippingFile = xFile;
+        _clippingImageUrl = xFile.path; // temp local path for preview
         _clippingStoragePath = 'pending_upload';
       });
     }
@@ -449,10 +442,10 @@ class _NewsFormScreenState extends ConsumerState<NewsFormScreen> {
 
         // Upload clipping if pending
         if (_clippingStoragePath == 'pending_upload' &&
-            _clippingImageUrl != null) {
+            _pendingClippingFile != null) {
           try {
             final url = await newsService.uploadClippingImage(
-                created.id, _clippingImageUrl!);
+                created.id, _pendingClippingFile!);
             await newsService.updateNewsItem(created.copyWith(
               clippingImageUrl: url,
             ));
@@ -475,12 +468,7 @@ class _NewsFormScreenState extends ConsumerState<NewsFormScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to save: $e'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        ErrorUtils.showErrorSnackBar(context, e);
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);

@@ -10,6 +10,7 @@ import '../../models/donor.dart';
 import '../../models/enums.dart';
 import '../../services/donor_service.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/shimmer_widgets.dart';
 
 /// Donor list screen with search, filter by type, and rich donor cards.
 class DonorListScreen extends ConsumerStatefulWidget {
@@ -193,21 +194,7 @@ class _DonorListScreenState extends ConsumerState<DonorListScreen> {
   }
 
   Widget _buildLoadingState() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: 6,
-      itemBuilder: (context, index) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Container(
-          height: 88,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-          ),
-          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        ),
-      ),
-    );
+    return const ShimmerLoadingList();
   }
 
   Widget _buildErrorState(Object error) {

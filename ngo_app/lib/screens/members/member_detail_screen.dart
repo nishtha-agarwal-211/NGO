@@ -10,6 +10,7 @@ import '../../models/member.dart';
 import '../../models/enums.dart';
 import '../../services/member_service.dart';
 import '../../services/auth_service.dart';
+import '../../utils/error_utils.dart';
 
 /// Full member profile screen — shows all fields, quick actions, badges.
 class MemberDetailScreen extends ConsumerWidget {
@@ -123,12 +124,7 @@ class MemberDetailScreen extends ConsumerWidget {
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to deactivate: $e'),
-              backgroundColor: AppTheme.errorColor,
-            ),
-          );
+          ErrorUtils.showErrorSnackBar(context, e);
         }
       }
     }

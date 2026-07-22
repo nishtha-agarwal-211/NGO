@@ -1,12 +1,12 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../models/news_item.dart';
 import '../models/enums.dart';
 import '../config/constants.dart';
 import '../config/supabase_config.dart';
 import 'auth_service.dart';
-import 'dart:io';
 
 /// Service for news/media CRUD operations via Supabase.
 class NewsService {
@@ -87,15 +87,22 @@ class NewsService {
   }
 
   /// Upload a news clipping image to Supabase Storage.
-  Future<String> uploadClippingImage(String newsId, String filePath) async {
+  ///
+  /// Accepts an [XFile] instead of a raw file path so it works safely
+  /// on both mobile and Flutter Web (no `dart:io` dependency).
+  Future<String> uploadClippingImage(String newsId, XFile file) async {
     final storagePath = SupabaseConfig.newsClippingPath(newsId);
+    final bytes = await file.readAsBytes();
 
     await _client.storage
         .from(SupabaseConfig.newsClippingsBucket)
-        .upload(
+        .uploadBinary(
           storagePath,
-          File(filePath),
-          fileOptions: const FileOptions(upsert: true),
+          bytes,
+          fileOptions: const FileOptions(
+            contentType: 'image/jpeg',
+            upsert: true,
+          ),
         );
 
     final url = _client.storage

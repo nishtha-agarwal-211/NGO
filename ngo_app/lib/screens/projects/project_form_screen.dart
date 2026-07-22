@@ -10,6 +10,7 @@ import '../../models/project.dart';
 import '../../models/enums.dart';
 import '../../services/project_service.dart';
 import '../../services/event_service.dart';
+import '../../utils/error_utils.dart';
 
 /// Create/edit project form with recurrence configuration.
 class ProjectFormScreen extends ConsumerStatefulWidget {
@@ -729,12 +730,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        ErrorUtils.showErrorSnackBar(context, e);
       }
     }
   }

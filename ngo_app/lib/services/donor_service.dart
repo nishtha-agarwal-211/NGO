@@ -169,7 +169,7 @@ class DonorService {
       query = query.neq('id', excludeDonorId);
     }
 
-    final response = await query;
+    final response = await query.limit(1);
     return (response as List).isNotEmpty;
   }
 }

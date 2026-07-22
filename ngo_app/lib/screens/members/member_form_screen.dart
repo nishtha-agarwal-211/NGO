@@ -11,6 +11,7 @@ import '../../config/theme.dart';
 import '../../models/member.dart';
 import '../../models/enums.dart';
 import '../../services/member_service.dart';
+import '../../utils/error_utils.dart';
 
 /// Create/edit member form with photo picker, date pickers, role selector,
 /// tags input, and validation.
@@ -735,12 +736,18 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        // Catch Postgres 23505 unique-violation as fallback for race condition
+        final msg = e.toString();
+        if (msg.contains('23505') || msg.contains('duplicate key')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('This mobile number is already registered'),
+              backgroundColor: AppTheme.errorColor,
+            ),
+          );
+        } else {
+          ErrorUtils.showErrorSnackBar(context, e);
+        }
       }
     }
   }

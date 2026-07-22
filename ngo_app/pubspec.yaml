@@ -23,9 +23,6 @@ dependencies:
   # Navigation
   go_router: ^14.8.1
 
-  # Local Database (Offline)
-  drift: ^2.22.1
-  sqlite3_flutter_libs: ^0.5.28
 
   # Data Classes & Serialization
   freezed_annotation: ^2.4.4
@@ -71,7 +68,7 @@ dev_dependencies:
   freezed: ^2.5.7
   json_serializable: ^6.9.2
   riverpod_generator: ^2.6.3
-  drift_dev: ^2.22.1
+
 
 flutter:
   uses-material-design: true

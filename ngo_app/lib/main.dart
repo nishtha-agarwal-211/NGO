@@ -96,7 +96,9 @@ class _NgoAppState extends ConsumerState<NgoApp> {
       title: 'श्री श्याम सेवा समिति',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
+      // NOTE: Dark theme is intentionally NOT set because screens currently
+      // hardcode Colors.white for card backgrounds, making dark mode look broken.
+      // Re-enable once all screens use Theme.of(context) colors instead.
       themeMode: ThemeMode.light,
       routerConfig: router,
     );

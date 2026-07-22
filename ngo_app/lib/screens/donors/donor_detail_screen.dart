@@ -11,6 +11,7 @@ import '../../models/donation.dart';
 import '../../models/enums.dart';
 import '../../services/donor_service.dart';
 import '../../services/auth_service.dart';
+import '../../utils/error_utils.dart';
 
 /// Donor profile screen with contact info, donation history, and totals.
 class DonorDetailScreen extends ConsumerWidget {
@@ -92,9 +93,7 @@ class DonorDetailScreen extends ConsumerWidget {
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete: $e'), backgroundColor: AppTheme.errorColor),
-          );
+          ErrorUtils.showErrorSnackBar(context, e);
         }
       }
     }

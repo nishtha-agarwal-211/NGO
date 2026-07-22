@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../config/theme.dart';
 import '../../config/router.dart';
@@ -12,6 +11,7 @@ import '../../services/donor_service.dart';
 import '../../services/project_service.dart';
 import '../../services/event_service.dart';
 import '../../services/news_service.dart';
+import '../../widgets/shimmer_widgets.dart';
 
 /// Dashboard screen — shows key stats, upcoming events, recent birthdays,
 /// and recent news. Serves as the app's main landing page.
@@ -297,18 +297,7 @@ class _StatCard extends ConsumerWidget {
                   color: color,
                 ),
               ),
-              loading: () => Shimmer.fromColors(
-                baseColor: Colors.grey[300]!,
-                highlightColor: Colors.grey[100]!,
-                child: Container(
-                  width: 40,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ),
+              loading: () => const ShimmerStatValue(),
               error: (_, __) => Text(
                 '—',
                 style: TextStyle(
@@ -388,18 +377,7 @@ class _DonationStatCard extends ConsumerWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  loading: () => Shimmer.fromColors(
-                    baseColor: Colors.white24,
-                    highlightColor: Colors.white54,
-                    child: Container(
-                      width: 100,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ),
+                  loading: () => const ShimmerDonationValue(),
                   error: (_, __) => const Text(
                     '—',
                     style: TextStyle(
@@ -530,20 +508,7 @@ class _UpcomingEventsSection extends ConsumerWidget {
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMD),
           itemCount: 3,
-          itemBuilder: (context, index) {
-            return Shimmer.fromColors(
-              baseColor: Colors.grey[300]!,
-              highlightColor: Colors.grey[100]!,
-              child: Container(
-                width: 200,
-                margin: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-                ),
-              ),
-            );
-          },
+          itemBuilder: (context, index) => const ShimmerCard(),
         ),
       ),
       error: (_, __) => _buildEmptyCard(
@@ -774,26 +739,7 @@ class _UpcomingBirthdaysSection extends ConsumerWidget {
           }).toList(),
         );
       },
-      loading: () => Column(
-        children: List.generate(
-          3,
-          (_) => Shimmer.fromColors(
-            baseColor: Colors.grey[300]!,
-            highlightColor: Colors.grey[100]!,
-            child: Container(
-              height: 60,
-              margin: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spacingMD,
-                vertical: 4,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-              ),
-            ),
-          ),
-        ),
-      ),
+      loading: () => const ShimmerListColumn(itemCount: 3),
       error: (_, __) => _buildEmptyCard(
         context,
         icon: Icons.error_outline,
@@ -882,26 +828,7 @@ class _RecentNewsSection extends ConsumerWidget {
           }).toList(),
         );
       },
-      loading: () => Column(
-        children: List.generate(
-          3,
-          (_) => Shimmer.fromColors(
-            baseColor: Colors.grey[300]!,
-            highlightColor: Colors.grey[100]!,
-            child: Container(
-              height: 60,
-              margin: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spacingMD,
-                vertical: 4,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-              ),
-            ),
-          ),
-        ),
-      ),
+      loading: () => const ShimmerListColumn(itemCount: 3),
       error: (_, __) => _buildEmptyCard(
         context,
         icon: Icons.error_outline,

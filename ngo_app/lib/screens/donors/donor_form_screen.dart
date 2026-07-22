@@ -7,6 +7,7 @@ import '../../config/theme.dart';
 import '../../models/donor.dart';
 import '../../models/enums.dart';
 import '../../services/donor_service.dart';
+import '../../utils/error_utils.dart';
 
 /// Create/edit donor form with duplicate detection by mobile number.
 class DonorFormScreen extends ConsumerStatefulWidget {
@@ -293,9 +294,18 @@ class _DonorFormScreenState extends ConsumerState<DonorFormScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppTheme.errorColor),
-        );
+        // Catch Postgres 23505 unique-violation as fallback for race condition
+        final msg = e.toString();
+        if (msg.contains('23505') || msg.contains('duplicate key')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('A donor with this mobile number already exists'),
+              backgroundColor: AppTheme.errorColor,
+            ),
+          );
+        } else {
+          ErrorUtils.showErrorSnackBar(context, e);
+        }
       }
     }
   }

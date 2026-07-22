@@ -12,6 +12,8 @@ import '../../models/photo.dart';
 import '../../services/photo_service.dart';
 import '../../services/event_service.dart';
 import '../../services/auth_service.dart';
+import '../../utils/error_utils.dart';
+import '../../widgets/shimmer_widgets.dart';
 
 /// Full-screen photo/video gallery for an event.
 /// Supports upload from camera/gallery for photos and videos,
@@ -218,16 +220,7 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
       ),
       itemCount: 12,
       itemBuilder: (context, index) {
-        return Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
-          highlightColor: Colors.grey[100]!,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-            ),
-          ),
-        );
+        return const ShimmerGridTile();
       },
     );
   }
@@ -462,12 +455,7 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to delete: $e'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        ErrorUtils.showErrorSnackBar(context, e);
       }
     }
   }
@@ -478,12 +466,7 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
       ref.invalidate(eventPhotosProvider(widget.eventId));
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update: $e'),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+        ErrorUtils.showErrorSnackBar(context, e);
       }
     }
   }

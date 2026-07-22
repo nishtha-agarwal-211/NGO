@@ -9,6 +9,7 @@ import '../../models/project.dart';
 import '../../models/event.dart';
 import '../../models/enums.dart';
 import '../../services/project_service.dart';
+import '../../utils/error_utils.dart';
 
 /// Full project detail screen with events list, recurrence info, and campaign progress.
 class ProjectDetailScreen extends ConsumerWidget {
@@ -87,9 +88,7 @@ class ProjectDetailScreen extends ConsumerWidget {
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed: $e'), backgroundColor: AppTheme.errorColor),
-          );
+          ErrorUtils.showErrorSnackBar(context, e);
         }
       }
     }

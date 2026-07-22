@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:intl/intl.dart';
 
 import '../../config/theme.dart';
@@ -11,6 +10,7 @@ import '../../models/news_item.dart';
 import '../../models/enums.dart';
 import '../../services/news_service.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/shimmer_widgets.dart';
 
 /// News list screen — public access (no auth required).
 /// Supports search, filter by type (article/video), and pull-to-refresh.
@@ -220,27 +220,7 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen> {
   }
 
   Widget _buildLoadingList() {
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: AppTheme.spacingSM),
-      itemCount: 5,
-      itemBuilder: (context, index) {
-        return Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
-          highlightColor: Colors.grey[100]!,
-          child: Container(
-            margin: const EdgeInsets.symmetric(
-              horizontal: AppTheme.spacingMD,
-              vertical: AppTheme.spacingSM,
-            ),
-            height: 120,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-            ),
-          ),
-        );
-      },
-    );
+    return const ShimmerLoadingList(itemCount: 5, itemHeight: 120);
   }
 }
 

@@ -168,7 +168,7 @@ class MemberService {
       query = query.neq('id', excludeMemberId);
     }
 
-    final response = await query;
+    final response = await query.limit(1);
     return (response as List).isNotEmpty;
   }
 }

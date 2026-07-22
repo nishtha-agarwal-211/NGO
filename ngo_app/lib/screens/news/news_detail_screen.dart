@@ -11,6 +11,7 @@ import '../../config/theme.dart';
 import '../../models/news_item.dart';
 import '../../services/news_service.dart';
 import '../../services/auth_service.dart';
+import '../../utils/error_utils.dart';
 
 /// News detail screen — shows full news item with YouTube embed,
 /// clipping image, article link, and sharing functionality.
@@ -425,12 +426,7 @@ class _NewsDetailContent extends ConsumerWidget {
             }
           } catch (e) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Failed to delete: $e'),
-                  backgroundColor: AppTheme.errorColor,
-                ),
-              );
+              ErrorUtils.showErrorSnackBar(context, e);
             }
           }
         }
