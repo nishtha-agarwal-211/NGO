@@ -130,7 +130,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
         ),
         error: (e, _) => Scaffold(
           appBar: AppBar(title: const Text('Edit Project')),
-          body: Center(child: Text('Error: $e')),
+          body: Center(child: Text(ErrorUtils.friendlyMessage(e))),
         ),
       );
     }

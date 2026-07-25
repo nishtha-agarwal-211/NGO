@@ -64,7 +64,7 @@ class EventFolderScreen extends ConsumerWidget {
       ),
       error: (e, _) => Scaffold(
         appBar: AppBar(title: const Text('Events')),
-        body: Center(child: Text('Error: $e')),
+        body: Center(child: Text(ErrorUtils.friendlyMessage(e))),
       ),
     );
   }

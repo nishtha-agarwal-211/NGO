@@ -96,7 +96,7 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
         ),
         error: (e, _) => Scaffold(
           appBar: AppBar(title: const Text('Edit Member')),
-          body: Center(child: Text('Error: $e')),
+          body: Center(child: Text(ErrorUtils.friendlyMessage(e))),
         ),
       );
     }

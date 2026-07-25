@@ -75,7 +75,7 @@ class _DonorFormScreenState extends ConsumerState<DonorFormScreen> {
         ),
         error: (e, _) => Scaffold(
           appBar: AppBar(title: const Text('Edit Donor')),
-          body: Center(child: Text('Error: $e')),
+          body: Center(child: Text(ErrorUtils.friendlyMessage(e))),
         ),
       );
     }

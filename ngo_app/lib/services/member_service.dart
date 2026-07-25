@@ -95,33 +95,29 @@ class MemberService {
   }
 
   /// Get members with upcoming birthdays within N days.
+  ///
+  /// Uses a Postgres RPC (`get_upcoming_birthdays`) that performs
+  /// day-of-year filtering server-side for efficiency.
   Future<List<Member>> getUpcomingBirthdays({int withinDays = 7}) async {
-    // Fetch all active members who have a DOB set, then filter client-side
-    // (Supabase/Postgres date comparison for recurring dates is complex,
-    //  and with a few thousand members this is acceptable)
-    final response = await _client
-        .from(AppConstants.membersTable)
-        .select()
-        .eq('is_active', true)
-        .not('date_of_birth', 'is', null)
-        .order('date_of_birth', ascending: true);
+    final response = await _client.rpc(
+      'get_upcoming_birthdays',
+      params: {'within_days': withinDays},
+    );
 
-    final members = (response as List).map((json) => Member.fromJson(json)).toList();
-    return members.where((m) => m.isBirthdayWithin(withinDays)).toList()
-      ..sort((a, b) => a.daysUntilBirthday.compareTo(b.daysUntilBirthday));
+    return (response as List).map((json) => Member.fromJson(json)).toList();
   }
 
   /// Get members with upcoming anniversaries within N days.
+  ///
+  /// Uses a Postgres RPC (`get_upcoming_anniversaries`) that performs
+  /// day-of-year filtering server-side for efficiency.
   Future<List<Member>> getUpcomingAnniversaries({int withinDays = 7}) async {
-    final response = await _client
-        .from(AppConstants.membersTable)
-        .select()
-        .eq('is_active', true)
-        .not('wedding_anniversary', 'is', null)
-        .order('wedding_anniversary', ascending: true);
+    final response = await _client.rpc(
+      'get_upcoming_anniversaries',
+      params: {'within_days': withinDays},
+    );
 
-    final members = (response as List).map((json) => Member.fromJson(json)).toList();
-    return members.where((m) => m.isAnniversaryWithin(withinDays)).toList();
+    return (response as List).map((json) => Member.fromJson(json)).toList();
   }
 
   /// Upload a member profile photo and return the public URL.

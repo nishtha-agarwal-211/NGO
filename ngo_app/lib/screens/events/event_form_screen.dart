@@ -112,7 +112,7 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
         ),
         error: (e, _) => Scaffold(
           appBar: AppBar(title: const Text('Edit Event')),
-          body: Center(child: Text('Error: $e')),
+          body: Center(child: Text(ErrorUtils.friendlyMessage(e))),
         ),
       );
     }

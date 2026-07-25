@@ -6,9 +6,8 @@ import 'package:intl/intl.dart';
 import '../../config/theme.dart';
 import '../../config/router.dart';
 import '../../models/event.dart';
+import '../../services/dashboard_service.dart';
 import '../../services/member_service.dart';
-import '../../services/donor_service.dart';
-import '../../services/project_service.dart';
 import '../../services/event_service.dart';
 import '../../services/news_service.dart';
 import '../../widgets/shimmer_widgets.dart';
@@ -46,11 +45,7 @@ class DashboardScreen extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(memberCountProvider);
-          ref.invalidate(donorCountProvider);
-          ref.invalidate(activeProjectCountProvider);
-          ref.invalidate(thisMonthEventCountProvider);
-          ref.invalidate(totalDonationsProvider);
+          ref.invalidate(dashboardStatsProvider);
           ref.invalidate(upcomingEventsProvider);
           ref.invalidate(upcomingBirthdaysProvider);
           ref.invalidate(recentNewsProvider);
@@ -175,73 +170,101 @@ class DashboardScreen extends ConsumerWidget {
 class _StatsGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(dashboardStatsProvider);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMD),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _StatCard(
-                  title: 'Members',
-                  icon: Icons.people_outline,
-                  color: AppTheme.primaryColor,
-                  provider: memberCountProvider,
-                  onTap: () => context.go(AppRoutes.members),
+      child: statsAsync.when(
+        data: (stats) => Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _StatCard(
+                    title: 'Members',
+                    icon: Icons.people_outline,
+                    color: AppTheme.primaryColor,
+                    value: stats.memberCount,
+                    onTap: () => context.go(AppRoutes.members),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _StatCard(
-                  title: 'Donors',
-                  icon: Icons.volunteer_activism_outlined,
-                  color: AppTheme.secondaryColor,
-                  provider: donorCountProvider,
-                  onTap: () => context.go(AppRoutes.donors),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _StatCard(
+                    title: 'Donors',
+                    icon: Icons.volunteer_activism_outlined,
+                    color: AppTheme.secondaryColor,
+                    value: stats.donorCount,
+                    onTap: () => context.go(AppRoutes.donors),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _StatCard(
-                  title: 'Active Projects',
-                  icon: Icons.folder_outlined,
-                  color: AppTheme.accentColor,
-                  provider: activeProjectCountProvider,
-                  onTap: () => context.go(AppRoutes.projects),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _StatCard(
+                    title: 'Active Projects',
+                    icon: Icons.folder_outlined,
+                    color: AppTheme.accentColor,
+                    value: stats.activeProjectCount,
+                    onTap: () => context.go(AppRoutes.projects),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _StatCard(
-                  title: 'This Month',
-                  subtitle: 'Events',
-                  icon: Icons.event_outlined,
-                  color: const Color(0xFF7C4DFF),
-                  provider: thisMonthEventCountProvider,
-                  onTap: () => context.push(AppRoutes.calendar),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _StatCard(
+                    title: 'This Month',
+                    subtitle: 'Events',
+                    icon: Icons.event_outlined,
+                    color: const Color(0xFF7C4DFF),
+                    value: stats.thisMonthEvents,
+                    onTap: () => context.push(AppRoutes.calendar),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Total Donations card (full width)
-          _DonationStatCard(),
-        ],
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Total Donations card (full width)
+            _DonationStatCard(totalDonations: stats.totalDonations),
+          ],
+        ),
+        loading: () => Column(
+          children: [
+            Row(
+              children: [
+                const Expanded(child: ShimmerCard(height: 120)),
+                const SizedBox(width: 12),
+                const Expanded(child: ShimmerCard(height: 120)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Expanded(child: ShimmerCard(height: 120)),
+                const SizedBox(width: 12),
+                const Expanded(child: ShimmerCard(height: 120)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const ShimmerCard(width: double.infinity, height: 80),
+          ],
+        ),
+        error: (_, __) => const Center(
+          child: Text('Could not load stats. Pull to refresh.'),
+        ),
       ),
     );
   }
 }
 
-class _StatCard extends ConsumerWidget {
+class _StatCard extends StatelessWidget {
   final String title;
   final String? subtitle;
   final IconData icon;
   final Color color;
-  final FutureProvider<int> provider;
+  final int value;
   final VoidCallback? onTap;
 
   const _StatCard({
@@ -249,14 +272,12 @@ class _StatCard extends ConsumerWidget {
     this.subtitle,
     required this.icon,
     required this.color,
-    required this.provider,
+    required this.value,
     this.onTap,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final valueAsync = ref.watch(provider);
-
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -288,23 +309,12 @@ class _StatCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 12),
-            valueAsync.when(
-              data: (value) => Text(
-                '$value',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                ),
-              ),
-              loading: () => const ShimmerStatValue(),
-              error: (_, __) => Text(
-                '—',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  color: color.withValues(alpha: 0.4),
-                ),
+            Text(
+              '$value',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: color,
               ),
             ),
             const SizedBox(height: 4),
@@ -322,11 +332,13 @@ class _StatCard extends ConsumerWidget {
   }
 }
 
-class _DonationStatCard extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final totalAsync = ref.watch(totalDonationsProvider);
+class _DonationStatCard extends StatelessWidget {
+  final double totalDonations;
 
+  const _DonationStatCard({required this.totalDonations});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacingMD),
       decoration: BoxDecoration(
@@ -368,23 +380,12 @@ class _DonationStatCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                totalAsync.when(
-                  data: (total) => Text(
-                    '₹${_formatAmount(total)}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  loading: () => const ShimmerDonationValue(),
-                  error: (_, __) => const Text(
-                    '—',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                    ),
+                Text(
+                  '₹${_formatAmount(totalDonations)}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],

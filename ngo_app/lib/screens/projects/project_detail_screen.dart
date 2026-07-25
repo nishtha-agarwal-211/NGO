@@ -50,7 +50,7 @@ class ProjectDetailScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text(ErrorUtils.friendlyMessage(e))),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/events/add?projectId=$projectId'),
@@ -395,7 +395,7 @@ class _ProjectDetailBody extends StatelessWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-      error: (e, _) => Text('Error: $e'),
+      error: (e, _) => Text(ErrorUtils.friendlyMessage(e)),
     );
   }
 
