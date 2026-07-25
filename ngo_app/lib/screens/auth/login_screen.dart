@@ -390,24 +390,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                     ),
                                     elevation: 0,
                                   ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      SvgPicture.string(
-                                        _googleLogoSvg,
-                                        width: 22,
-                                        height: 22,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        'Sign in with Google',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppTheme.textPrimary,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        SvgPicture.string(
+                                          _googleLogoSvg,
+                                          width: 22,
+                                          height: 22,
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          'Sign in with Google',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppTheme.textPrimary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),

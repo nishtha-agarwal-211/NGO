@@ -11,6 +11,7 @@ import '../../models/enums.dart';
 import '../../services/donor_service.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/shimmer_widgets.dart';
+import '../../utils/export_utils.dart';
 
 /// Donor list screen with search, filter by type, and rich donor cards.
 class DonorListScreen extends ConsumerStatefulWidget {
@@ -87,6 +88,20 @@ class _DonorListScreenState extends ConsumerState<DonorListScreen> {
             icon: Icon(_showSearch ? Icons.close : Icons.search),
             onPressed: _toggleSearch,
             tooltip: _showSearch ? 'Close search' : 'Search',
+          ),
+          IconButton(
+            icon: const Icon(Icons.download_outlined),
+            tooltip: 'Export CSV',
+            onPressed: () {
+              final donors = donorListAsync.valueOrNull ?? [];
+              if (donors.isNotEmpty) {
+                ExportUtils.exportDonorsToCsv(donors);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('No donors available to export')),
+                );
+              }
+            },
           ),
           PopupMenuButton<DonorType?>(
             icon: Icon(

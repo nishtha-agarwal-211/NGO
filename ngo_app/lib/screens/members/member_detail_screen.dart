@@ -11,6 +11,7 @@ import '../../models/enums.dart';
 import '../../services/member_service.dart';
 import '../../services/auth_service.dart';
 import '../../utils/error_utils.dart';
+import '../../utils/communication_utils.dart';
 
 /// Full member profile screen — shows all fields, quick actions, badges.
 class MemberDetailScreen extends ConsumerWidget {
@@ -400,6 +401,7 @@ class _MemberDetailBody extends StatelessWidget {
               ? 'Birthday Today!'
               : 'Birthday in ${member.daysUntilBirthday} day${member.daysUntilBirthday == 1 ? '' : 's'}',
           color: AppTheme.warningColor,
+          onWishTap: () => CommunicationUtils.sendBirthdayWish(name: member.name, phone: member.mobile),
         ),
         if (member.isBirthdayWithin(7) && member.isAnniversaryWithin(7))
           const SizedBox(height: 8),
@@ -407,6 +409,7 @@ class _MemberDetailBody extends StatelessWidget {
           emoji: '💍',
           label: 'Wedding Anniversary Coming Up!',
           color: Colors.pink,
+          onWishTap: () => CommunicationUtils.sendAnniversaryWish(name: member.name, phone: member.mobile),
         ),
       ],
     );
@@ -416,6 +419,7 @@ class _MemberDetailBody extends StatelessWidget {
     required String emoji,
     required String label,
     required Color color,
+    VoidCallback? onWishTap,
   }) {
     return Container(
       width: double.infinity,
@@ -439,6 +443,19 @@ class _MemberDetailBody extends StatelessWidget {
               ),
             ),
           ),
+          if (onWishTap != null)
+            ElevatedButton.icon(
+              onPressed: onWishTap,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF25D366),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              icon: const Icon(Icons.chat, size: 14),
+              label: const Text('Wish', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            ),
         ],
       ),
     );

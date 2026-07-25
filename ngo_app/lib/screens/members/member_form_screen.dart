@@ -152,6 +152,7 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
               icon: Icons.phone_outlined,
               required: true,
               keyboardType: TextInputType.phone,
+              validator: _validateMobile,
             ),
             const SizedBox(height: 16),
 
@@ -161,6 +162,7 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
               label: 'Email (optional)',
               icon: Icons.email_outlined,
               keyboardType: TextInputType.emailAddress,
+              validator: _validateEmail,
             ),
             const SizedBox(height: 16),
 
@@ -333,6 +335,26 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
     }
   }
 
+  String? _validateMobile(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Mobile Number is required';
+    }
+    final clean = value.trim().replaceAll(RegExp(r'[\s\-\+]'), '');
+    if (!RegExp(r'^[0-9]{10,12}$').hasMatch(clean)) {
+      return 'Enter a valid 10-digit mobile number';
+    }
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(value.trim())) {
+      return 'Enter a valid email address';
+    }
+    return null;
+  }
+
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -341,6 +363,7 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
     TextInputType? keyboardType,
     int maxLines = 1,
     TextCapitalization textCapitalization = TextCapitalization.none,
+    String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
@@ -351,14 +374,15 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
         labelText: label,
         prefixIcon: Icon(icon),
       ),
-      validator: required
-          ? (value) {
-              if (value == null || value.trim().isEmpty) {
-                return '$label is required';
-              }
-              return null;
-            }
-          : null,
+      validator: validator ??
+          (required
+              ? (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return '$label is required';
+                  }
+                  return null;
+                }
+              : null),
     );
   }
 

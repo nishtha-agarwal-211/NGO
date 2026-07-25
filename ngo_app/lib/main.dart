@@ -10,6 +10,7 @@ import 'config/theme.dart';
 import 'config/router.dart';
 import 'services/notification_service.dart';
 import 'services/background_worker.dart';
+import 'widgets/offline_banner.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -96,10 +97,9 @@ class _NgoAppState extends ConsumerState<NgoApp> {
       title: 'श्री श्याम सेवा समिति',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      // NOTE: Dark theme is intentionally NOT set because screens currently
-      // hardcode Colors.white for card backgrounds, making dark mode look broken.
-      // Re-enable once all screens use Theme.of(context) colors instead.
-      themeMode: ThemeMode.light,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
+      builder: (context, child) => OfflineBannerWrapper(child: child ?? const SizedBox.shrink()),
       routerConfig: router,
     );
   }

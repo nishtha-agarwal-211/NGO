@@ -12,6 +12,7 @@ import '../../models/enums.dart';
 import '../../services/donor_service.dart';
 import '../../services/auth_service.dart';
 import '../../utils/error_utils.dart';
+import '../../utils/communication_utils.dart';
 
 /// Donor profile screen with contact info, donation history, and totals.
 class DonorDetailScreen extends ConsumerWidget {
@@ -260,14 +261,25 @@ class _DonorDetailBody extends StatelessWidget {
             onTap: () => _launch('tel:${donor.mobile}'),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
         Expanded(
           child: _QuickActionCard(
             icon: Icons.chat, label: 'WhatsApp', color: const Color(0xFF25D366),
             onTap: () => _launch('https://wa.me/${donor.mobile.replaceAll(RegExp(r'[^0-9]'), '')}'),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _QuickActionCard(
+            icon: Icons.receipt_long_outlined, label: 'Receipt', color: AppTheme.secondaryDark,
+            onTap: () => CommunicationUtils.sendDonationReceipt(
+              donorName: donor.name,
+              phone: donor.mobile,
+              amountOrItem: '₹${_formatAmount(totalDonated)}',
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
         Expanded(
           child: _QuickActionCard(
             icon: Icons.sms_outlined, label: 'SMS', color: AppTheme.primaryColor,

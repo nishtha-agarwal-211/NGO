@@ -11,6 +11,7 @@ import '../../models/enums.dart';
 import '../../services/member_service.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/shimmer_widgets.dart';
+import '../../utils/export_utils.dart';
 
 /// Member list screen with search, filter, and rich member cards.
 class MemberListScreen extends ConsumerStatefulWidget {
@@ -88,6 +89,20 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
             icon: Icon(_showSearch ? Icons.close : Icons.search),
             onPressed: _toggleSearch,
             tooltip: _showSearch ? 'Close search' : 'Search',
+          ),
+          IconButton(
+            icon: const Icon(Icons.download_outlined),
+            tooltip: 'Export CSV',
+            onPressed: () {
+              final members = memberListAsync.valueOrNull ?? [];
+              if (members.isNotEmpty) {
+                ExportUtils.exportMembersToCsv(members);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('No members available to export')),
+                );
+              }
+            },
           ),
           PopupMenuButton<MemberRole?>(
             icon: Icon(

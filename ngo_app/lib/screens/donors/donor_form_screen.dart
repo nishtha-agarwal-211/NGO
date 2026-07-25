@@ -126,7 +126,14 @@ class _DonorFormScreenState extends ConsumerState<DonorFormScreen> {
                 labelText: 'Mobile Number',
                 prefixIcon: Icon(Icons.phone_outlined),
               ),
-              validator: (v) => v == null || v.trim().isEmpty ? 'Mobile is required' : null,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'Mobile is required';
+                final clean = v.trim().replaceAll(RegExp(r'[\s\-\+]'), '');
+                if (!RegExp(r'^[0-9]{10,12}$').hasMatch(clean)) {
+                  return 'Enter a valid 10-digit mobile number';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 16),
 
@@ -138,6 +145,14 @@ class _DonorFormScreenState extends ConsumerState<DonorFormScreen> {
                 labelText: 'Email (optional)',
                 prefixIcon: Icon(Icons.email_outlined),
               ),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return null;
+                final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                if (!emailRegex.hasMatch(v.trim())) {
+                  return 'Enter a valid email address';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 16),
 
