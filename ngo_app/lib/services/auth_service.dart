@@ -32,9 +32,19 @@ class AuthService {
 
   /// Sign in with Google OAuth.
   Future<bool> signInWithGoogle() async {
+    String? redirectTo;
+    if (kIsWeb) {
+      final uri = Uri.base;
+      if (uri.scheme == 'http' || uri.scheme == 'https') {
+        redirectTo = uri.origin;
+      }
+    } else {
+      redirectTo = 'io.supabase.ngoapp://login-callback';
+    }
+
     return await _client.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: kIsWeb ? null : 'io.supabase.ngoapp://login-callback',
+      redirectTo: redirectTo,
     );
   }
 
