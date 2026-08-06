@@ -54,23 +54,42 @@ class PhotoService {
   }
 
   /// Delete a photo or video (removes from storage and database).
+  ///
+  /// For videos, we try [eventVideosBucket] first and then fall back to
+  /// [eventPhotosBucket] because [uploadVideo] may have stored the file
+  /// in either bucket depending on server configuration.
   Future<void> deletePhoto(Photo photo) async {
     // Remove from storage
     try {
-      final bucket = photo.isVideo
+      final primaryBucket = photo.isVideo
           ? SupabaseConfig.eventVideosBucket
           : SupabaseConfig.eventPhotosBucket;
 
       await _client.storage
-          .from(bucket)
+          .from(primaryBucket)
           .remove([photo.storagePath]);
       if (photo.thumbnailPath != null) {
         await _client.storage
-            .from(bucket)
+            .from(primaryBucket)
             .remove([photo.thumbnailPath!]);
       }
     } catch (_) {
-      // Storage deletion may fail if file doesn't exist — continue
+      // If the primary bucket failed and this is a video, try the fallback
+      // bucket (uploadVideo may have stored it in eventPhotosBucket).
+      if (photo.isVideo) {
+        try {
+          await _client.storage
+              .from(SupabaseConfig.eventPhotosBucket)
+              .remove([photo.storagePath]);
+          if (photo.thumbnailPath != null) {
+            await _client.storage
+                .from(SupabaseConfig.eventPhotosBucket)
+                .remove([photo.thumbnailPath!]);
+          }
+        } catch (_) {
+          // Storage deletion may fail if file doesn't exist — continue
+        }
+      }
     }
 
     // Remove from database

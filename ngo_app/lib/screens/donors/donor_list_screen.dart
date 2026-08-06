@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +14,7 @@ import '../../services/auth_service.dart';
 import '../../widgets/shimmer_widgets.dart';
 import '../../utils/export_utils.dart';
 import '../../widgets/scale_tap_wrapper.dart';
+import '../../utils/error_utils.dart';
 
 /// Donor list screen with search, filter by type, and rich donor cards.
 class DonorListScreen extends ConsumerStatefulWidget {
@@ -28,8 +30,11 @@ class _DonorListScreenState extends ConsumerState<DonorListScreen> {
   bool _showSearch = false;
   String _searchQuery = '';
 
+  Timer? _debounce;
+
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -40,8 +45,11 @@ class _DonorListScreenState extends ConsumerState<DonorListScreen> {
       );
 
   void _onSearchChanged(String value) {
-    setState(() => _searchQuery = value);
-    ref.invalidate(donorListProvider);
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      setState(() => _searchQuery = value);
+      ref.invalidate(donorListProvider);
+    });
   }
 
   void _toggleSearch() {
@@ -225,7 +233,7 @@ class _DonorListScreenState extends ConsumerState<DonorListScreen> {
             Text('Something went wrong',
                 style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            Text(error.toString(),
+            Text(ErrorUtils.friendlyMessage(error),
                 textAlign: TextAlign.center,
                 style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textSecondary)),
             const SizedBox(height: 24),

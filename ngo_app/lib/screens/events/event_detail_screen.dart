@@ -15,6 +15,7 @@ import '../../services/member_service.dart';
 import '../../services/donor_service.dart';
 import '../../models/member.dart';
 import '../../models/donor.dart';
+import '../../utils/error_utils.dart';
 
 /// Full event detail screen — shows event info, volunteers, donations,
 /// expenses, and photo gallery link.
@@ -52,7 +53,7 @@ class EventDetailScreen extends ConsumerWidget {
             children: [
               const Icon(Icons.error_outline, size: 48, color: AppTheme.errorColor),
               const SizedBox(height: 16),
-              Text('Error: $e', textAlign: TextAlign.center),
+              Text(ErrorUtils.friendlyMessage(e), textAlign: TextAlign.center),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: () => ref.invalidate(eventDetailProvider),
@@ -191,7 +192,7 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
                   volunteersAsync.when(
                     data: (volunteers) => _buildVolunteersList(volunteers),
                     loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                    error: (e, _) => Text('Error loading volunteers: $e'),
+                    error: (e, _) => Text(ErrorUtils.friendlyMessage(e)),
                   ),
                   const SizedBox(height: 24),
 
@@ -202,7 +203,7 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
                     donationsAsync.when(
                       data: (donations) => _buildDonationsList(donations),
                       loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                      error: (e, _) => Text('Error loading donations: $e'),
+                      error: (e, _) => Text(ErrorUtils.friendlyMessage(e)),
                     ),
                     const SizedBox(height: 24),
 
@@ -212,7 +213,7 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
                     expensesAsync.when(
                       data: (expenses) => _buildExpensesList(expenses),
                       loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-                      error: (e, _) => Text('Error loading expenses: $e'),
+                      error: (e, _) => Text(ErrorUtils.friendlyMessage(e)),
                     ),
                     const SizedBox(height: 24),
                   ],

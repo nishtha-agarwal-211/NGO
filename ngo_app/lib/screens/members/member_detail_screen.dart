@@ -79,7 +79,7 @@ class MemberDetailScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              error.toString(),
+              ErrorUtils.friendlyMessage(error),
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textSecondary),
             ),

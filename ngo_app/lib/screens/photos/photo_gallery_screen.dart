@@ -157,7 +157,7 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
                     Text('Failed to load photos',
                         style: Theme.of(context).textTheme.bodyLarge),
                     const SizedBox(height: 4),
-                    Text(error.toString(),
+                    Text(ErrorUtils.friendlyMessage(error),
                         style: Theme.of(context).textTheme.bodySmall),
                     const SizedBox(height: 16),
                     ElevatedButton(

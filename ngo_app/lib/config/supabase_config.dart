@@ -12,6 +12,9 @@ class SupabaseConfig {
   SupabaseConfig._();
 
   /// Your Supabase project URL (overridable via `--dart-define=SUPABASE_URL=…`)
+  ///
+  /// The [defaultValue] is the **dev/local** project URL. Production builds
+  /// MUST supply the value via `--dart-define` so it never ships in the binary.
   static const String supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
     defaultValue: 'https://mwzxaiqcgujcgvbslypq.supabase.co',
@@ -19,6 +22,11 @@ class SupabaseConfig {
 
   /// Your Supabase anonymous (public) key
   /// (overridable via `--dart-define=SUPABASE_ANON_KEY=…`)
+  ///
+  /// **Note:** This is the *publishable* anon key — it is designed to be
+  /// public. Row-Level Security (RLS) is the real access-control boundary,
+  /// not this key. The [defaultValue] exists solely for local-dev convenience;
+  /// CI / release builds should always pass `--dart-define`.
   static const String supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
     defaultValue: 'sb_publishable_efra7-8leY8sgMVNwXNG_Q_1zXh5sz-',

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -21,6 +22,7 @@ class ExportUtils {
 
   /// Export list of members to CSV and share file.
   static Future<void> exportMembersToCsv(List<Member> members) async {
+    if (kIsWeb) return; // dart:io is unavailable on web
     final buffer = StringBuffer();
     // CSV Header
     buffer.writeln('ID,Name,Mobile,Email,Role,Active,Join Date,DOB,Anniversary,Address,Notes,Tags');
@@ -62,6 +64,7 @@ class ExportUtils {
 
   /// Export list of donors to CSV and share file.
   static Future<void> exportDonorsToCsv(List<Donor> donors) async {
+    if (kIsWeb) return; // dart:io is unavailable on web
     final buffer = StringBuffer();
     // CSV Header
     buffer.writeln('ID,Name,Mobile,Email,Donor Type,Total Donations,Total Amount,Created Date,Address,Notes');

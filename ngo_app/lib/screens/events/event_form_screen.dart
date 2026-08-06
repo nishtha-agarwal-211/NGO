@@ -131,23 +131,6 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.isEditing ? 'Edit Event' : 'New Event'),
-        actions: [
-          if (_isSaving)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            )
-          else
-            TextButton.icon(
-              onPressed: () => _saveEvent(existing),
-              icon: const Icon(Icons.check),
-              label: const Text('Save'),
-            ),
-        ],
       ),
       body: Form(
         key: _formKey,

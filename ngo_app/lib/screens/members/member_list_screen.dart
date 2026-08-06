@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +14,7 @@ import '../../services/auth_service.dart';
 import '../../widgets/shimmer_widgets.dart';
 import '../../utils/export_utils.dart';
 import '../../widgets/scale_tap_wrapper.dart';
+import '../../utils/error_utils.dart';
 
 /// Member list screen with search, filter, and rich member cards.
 class MemberListScreen extends ConsumerStatefulWidget {
@@ -28,8 +30,11 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
   bool _showSearch = false;
   String _searchQuery = '';
 
+  Timer? _debounce;
+
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -41,8 +46,11 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
       );
 
   void _onSearchChanged(String value) {
-    setState(() => _searchQuery = value);
-    ref.invalidate(memberListProvider);
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      setState(() => _searchQuery = value);
+      ref.invalidate(memberListProvider);
+    });
   }
 
   void _toggleSearch() {
@@ -238,7 +246,7 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              error.toString(),
+              ErrorUtils.friendlyMessage(error),
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 14,
