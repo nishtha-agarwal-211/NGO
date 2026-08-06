@@ -34,7 +34,7 @@ class AppTheme {
   // ─── Text Colors ──────────────────────────────────────────────
   static const Color textPrimary = Color(0xFF1A1A2E);
   static const Color textSecondary = Color(0xFF6B7280);
-  static const Color textHint = Color(0xFF9CA3AF);
+  static const Color textHint = Color(0xFF7C8591);
   static const Color textOnPrimary = Colors.white;
   static const Color textOnSecondary = Colors.black;
 

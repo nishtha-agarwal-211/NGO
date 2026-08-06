@@ -32,7 +32,24 @@ class DashboardScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 10),
-            const Text('श्री श्याम सेवा समिति'),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'श्री श्याम सेवा समिति',
+                  style: TextStyle(fontSize: 16),
+                ),
+                Text(
+                  _greeting(),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
         actions: [
@@ -54,10 +71,6 @@ class DashboardScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(bottom: AppTheme.spacingXXL),
           children: [
             const SizedBox(height: AppTheme.spacingSM),
-
-            // Welcome header
-            _buildWelcomeHeader(context),
-            const SizedBox(height: AppTheme.spacingMD),
 
             // Stats cards
             _StatsGrid(),
@@ -97,71 +110,12 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildWelcomeHeader(BuildContext context) {
-    final now = DateTime.now();
-    final hour = now.hour;
-    String greeting;
-    IconData greetingIcon;
-
-    if (hour < 12) {
-      greeting = 'Good Morning';
-      greetingIcon = Icons.wb_sunny_outlined;
-    } else if (hour < 17) {
-      greeting = 'Good Afternoon';
-      greetingIcon = Icons.wb_sunny;
-    } else {
-      greeting = 'Good Evening';
-      greetingIcon = Icons.nights_stay_outlined;
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMD),
-      child: Container(
-        padding: const EdgeInsets.all(AppTheme.spacingMD),
-        decoration: BoxDecoration(
-          gradient: AppTheme.primaryGradient,
-          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-          boxShadow: AppTheme.elevatedShadow,
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(greetingIcon, color: Colors.white, size: 28),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    greeting,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    DateFormat('EEEE, MMMM d').format(now),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  static String _greeting() {
+    final hour = DateTime.now().hour;
+    final date = DateFormat('EEE, MMM d').format(DateTime.now());
+    if (hour < 12) return '☀️ Good Morning · $date';
+    if (hour < 17) return '☀️ Good Afternoon · $date';
+    return '🌙 Good Evening · $date';
   }
 }
 
@@ -177,6 +131,7 @@ class _StatsGrid extends ConsumerWidget {
       child: statsAsync.when(
         data: (stats) => Column(
           children: [
+            // Row 1: 3 compact stat cards
             Row(
               children: [
                 Expanded(
@@ -186,9 +141,10 @@ class _StatsGrid extends ConsumerWidget {
                     color: AppTheme.primaryColor,
                     value: stats.memberCount,
                     onTap: () => context.go(AppRoutes.members),
+                    compact: true,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: _StatCard(
                     title: 'Donors',
@@ -196,23 +152,26 @@ class _StatsGrid extends ConsumerWidget {
                     color: AppTheme.secondaryColor,
                     value: stats.donorCount,
                     onTap: () => context.go(AppRoutes.donors),
+                    compact: true,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
+                const SizedBox(width: 10),
                 Expanded(
                   child: _StatCard(
-                    title: 'Active Projects',
+                    title: 'Projects',
                     icon: Icons.folder_outlined,
                     color: AppTheme.accentColor,
                     value: stats.activeProjectCount,
                     onTap: () => context.go(AppRoutes.projects),
+                    compact: true,
                   ),
                 ),
-                const SizedBox(width: 12),
+              ],
+            ),
+            const SizedBox(height: 10),
+            // Row 2: Events card + Donations card
+            Row(
+              children: [
                 Expanded(
                   child: _StatCard(
                     title: 'This Month',
@@ -221,34 +180,37 @@ class _StatsGrid extends ConsumerWidget {
                     color: const Color(0xFF7C4DFF),
                     value: stats.thisMonthEvents,
                     onTap: () => context.push(AppRoutes.calendar),
+                    compact: true,
                   ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: _DonationStatCard(totalDonations: stats.totalDonations),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            // Total Donations card (full width)
-            _DonationStatCard(totalDonations: stats.totalDonations),
           ],
         ),
         loading: () => Column(
           children: [
             Row(
               children: [
-                const Expanded(child: ShimmerCard(height: 120)),
-                const SizedBox(width: 12),
-                const Expanded(child: ShimmerCard(height: 120)),
+                const Expanded(child: ShimmerCard(height: 90)),
+                const SizedBox(width: 10),
+                const Expanded(child: ShimmerCard(height: 90)),
+                const SizedBox(width: 10),
+                const Expanded(child: ShimmerCard(height: 90)),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Row(
               children: [
-                const Expanded(child: ShimmerCard(height: 120)),
-                const SizedBox(width: 12),
-                const Expanded(child: ShimmerCard(height: 120)),
+                const Expanded(child: ShimmerCard(height: 80)),
+                const SizedBox(width: 10),
+                const Expanded(flex: 2, child: ShimmerCard(height: 80)),
               ],
             ),
-            const SizedBox(height: 12),
-            const ShimmerCard(width: double.infinity, height: 80),
           ],
         ),
         error: (_, __) => const Center(
@@ -266,6 +228,7 @@ class _StatCard extends StatelessWidget {
   final Color color;
   final int value;
   final VoidCallback? onTap;
+  final bool compact;
 
   const _StatCard({
     required this.title,
@@ -274,6 +237,7 @@ class _StatCard extends StatelessWidget {
     required this.color,
     required this.value,
     this.onTap,
+    this.compact = false,
   });
 
   @override
@@ -281,7 +245,7 @@ class _StatCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(AppTheme.spacingMD),
+        padding: EdgeInsets.all(compact ? 12 : AppTheme.spacingMD),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
@@ -290,39 +254,30 @@ class _StatCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(icon, color: color, size: 20),
-                ),
-                const Spacer(),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 14,
-                  color: AppTheme.textHint,
-                ),
-              ],
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: compact ? 16 : 20),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: compact ? 8 : 12),
             Text(
               '$value',
               style: TextStyle(
-                fontSize: 28,
+                fontSize: compact ? 22 : 28,
                 fontWeight: FontWeight.w700,
                 color: color,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               subtitle ?? title,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppTheme.textSecondary,
                     fontWeight: FontWeight.w500,
+                    fontSize: compact ? 11 : null,
                   ),
             ),
           ],

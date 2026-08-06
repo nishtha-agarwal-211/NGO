@@ -108,23 +108,6 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.isEditing ? 'Edit Member' : 'Add Member'),
-        actions: [
-          if (_isSaving)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            )
-          else
-            TextButton.icon(
-              onPressed: () => _saveMember(existing),
-              icon: const Icon(Icons.check),
-              label: const Text('Save'),
-            ),
-        ],
       ),
       body: Form(
         key: _formKey,
@@ -215,27 +198,30 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
               const SizedBox(height: 24),
             ],
 
-            // Save button
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
-                onPressed: _isSaving ? null : () => _saveMember(existing),
-                icon: _isSaving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.check),
-                label: Text(widget.isEditing ? 'Update Member' : 'Add Member'),
-              ),
-            ),
-            const SizedBox(height: 40),
           ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: _isSaving ? null : () => _saveMember(existing),
+              icon: _isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.check),
+              label: Text(widget.isEditing ? 'Update Member' : 'Add Member'),
+            ),
+          ),
         ),
       ),
     );
@@ -575,6 +561,16 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
     }
   }
 
+  // Suggested tags shown when no tags have been added yet
+  static const _suggestedTags = [
+    'cooking',
+    'driving',
+    'weekend-available',
+    'event-mgmt',
+    'medical',
+    'teaching',
+  ];
+
   Widget _buildTagsInput() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -610,6 +606,35 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
             ),
           ],
         ),
+        // Suggested tags when no tags have been added yet
+        if (_tags.isEmpty) ...[
+          const SizedBox(height: 10),
+          Text(
+            'Suggested:',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: AppTheme.textHint,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _suggestedTags.map((tag) {
+              return ActionChip(
+                label: Text(tag),
+                avatar: const Icon(Icons.add, size: 14),
+                visualDensity: VisualDensity.compact,
+                onPressed: () {
+                  if (!_tags.contains(tag)) {
+                    setState(() => _tags.add(tag));
+                  }
+                },
+              );
+            }).toList(),
+          ),
+        ],
       ],
     );
   }

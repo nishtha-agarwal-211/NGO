@@ -87,19 +87,6 @@ class _DonorFormScreenState extends ConsumerState<DonorFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.isEditing ? 'Edit Donor' : 'Add Donor'),
-        actions: [
-          if (_isSaving)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-            )
-          else
-            TextButton.icon(
-              onPressed: () => _saveDonor(existing),
-              icon: const Icon(Icons.check),
-              label: const Text('Save'),
-            ),
-        ],
       ),
       body: Form(
         key: _formKey,
@@ -232,22 +219,24 @@ class _DonorFormScreenState extends ConsumerState<DonorFormScreen> {
               ),
             ),
             const SizedBox(height: 32),
-
-            // Save button
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
-                onPressed: _isSaving ? null : () => _saveDonor(existing),
-                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentColor),
-                icon: _isSaving
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Icon(Icons.check),
-                label: Text(widget.isEditing ? 'Update Donor' : 'Add Donor'),
-              ),
-            ),
-            const SizedBox(height: 40),
           ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: _isSaving ? null : () => _saveDonor(existing),
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentColor),
+              icon: _isSaving
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.check),
+              label: Text(widget.isEditing ? 'Update Donor' : 'Add Donor'),
+            ),
+          ),
         ),
       ),
     );

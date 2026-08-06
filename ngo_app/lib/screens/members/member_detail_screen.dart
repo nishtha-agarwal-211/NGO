@@ -347,41 +347,53 @@ class _MemberDetailBody extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _QuickActionCard(
-            icon: Icons.call,
-            label: 'Call',
-            color: AppTheme.successColor,
-            onTap: () => _launch('tel:${member.mobile}'),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _QuickActionCard(
-            icon: Icons.chat,
-            label: 'WhatsApp',
-            color: const Color(0xFF25D366),
-            onTap: () => _launch(
-              'https://wa.me/${member.mobile.replaceAll(RegExp(r'[^0-9]'), '')}',
+          child: Tooltip(
+            message: 'Call ${member.name}',
+            child: _QuickActionCard(
+              icon: Icons.call,
+              label: 'Call',
+              color: AppTheme.successColor,
+              onTap: () => _launch('tel:${member.mobile}'),
             ),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: _QuickActionCard(
-            icon: Icons.sms_outlined,
-            label: 'SMS',
-            color: AppTheme.primaryColor,
-            onTap: () => _launch('sms:${member.mobile}'),
+          child: Tooltip(
+            message: 'WhatsApp ${member.name}',
+            child: _QuickActionCard(
+              icon: Icons.chat,
+              label: 'WhatsApp',
+              color: const Color(0xFF25D366),
+              onTap: () => _launch(
+                'https://wa.me/${member.mobile.replaceAll(RegExp(r'[^0-9]'), '')}',
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Tooltip(
+            message: 'SMS ${member.name}',
+            child: _QuickActionCard(
+              icon: Icons.sms_outlined,
+              label: 'SMS',
+              color: AppTheme.primaryColor,
+              onTap: () => _launch('sms:${member.mobile}'),
+            ),
           ),
         ),
         if (member.email != null) ...[
           const SizedBox(width: 12),
           Expanded(
-            child: _QuickActionCard(
-              icon: Icons.email_outlined,
-              label: 'Email',
-              color: AppTheme.secondaryDark,
-              onTap: () => _launch('mailto:${member.email}'),
+            child: Tooltip(
+              message: 'Email ${member.name}',
+              child: _QuickActionCard(
+                icon: Icons.email_outlined,
+                label: 'Email',
+                color: AppTheme.secondaryDark,
+                onTap: () => _launch('mailto:${member.email}'),
+              ),
             ),
           ),
         ],

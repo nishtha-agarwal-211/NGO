@@ -12,6 +12,7 @@ import '../../services/donor_service.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/shimmer_widgets.dart';
 import '../../utils/export_utils.dart';
+import '../../widgets/scale_tap_wrapper.dart';
 
 /// Donor list screen with search, filter by type, and rich donor cards.
 class DonorListScreen extends ConsumerStatefulWidget {
@@ -290,14 +291,15 @@ class _DonorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        child: InkWell(
-          onTap: onTap,
+    return ScaleTapWrapper(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: Material(
+          color: Colors.white,
           borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -378,6 +380,7 @@ class _DonorCard extends StatelessWidget {
                 ),
               ],
             ),
+          ),
           ),
         ),
       ),

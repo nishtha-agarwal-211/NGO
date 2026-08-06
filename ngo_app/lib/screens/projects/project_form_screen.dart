@@ -44,6 +44,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
 
   bool _isSaving = false;
   bool _isLoaded = false;
+  bool _showGoalSection = false;
   
   // Category suggestions
   static const _categories = [
@@ -89,6 +90,12 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
     _startDate = project.startDate;
     _endDate = project.endDate;
     _recurrenceDayOfWeek = project.recurrenceDayOfWeek;
+    // Auto-expand goal section if existing project has goal data
+    if ((project.goalDescription != null && project.goalDescription!.isNotEmpty) ||
+        project.targetAmount != null ||
+        project.targetBeneficiaryCount != null) {
+      _showGoalSection = true;
+    }
     if (project.recurrenceTime != null) {
       final parts = project.recurrenceTime!.split(':');
       if (parts.length >= 2) {
@@ -142,23 +149,6 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.isEditing ? 'Edit Project' : 'New Project'),
-        actions: [
-          if (_isSaving)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            )
-          else
-            TextButton.icon(
-              onPressed: () => _saveProject(existing),
-              icon: const Icon(Icons.check),
-              label: const Text('Save'),
-            ),
-        ],
       ),
       body: Form(
         key: _formKey,
@@ -494,88 +484,144 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
             ),
             const SizedBox(height: 24),
 
-            // ─── Campaign / Goal fields ────────────────────────
-            _buildSectionHeader('Goal & Targets (optional)'),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _goalDescriptionController,
-              maxLines: 2,
-              textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(
-                labelText: 'Goal Description',
-                prefixIcon: Icon(Icons.flag_outlined),
-                hintText: 'e.g., Sponsor 50 students\' school fees',
-                alignLabelWithHint: true,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _targetAmountController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      labelText: 'Target Amount (₹)',
-                      prefixIcon: Icon(Icons.currency_rupee),
-                    ),
-                    validator: (v) {
-                      if (v != null && v.isNotEmpty) {
-                        if (double.tryParse(v) == null) {
-                          return 'Invalid number';
-                        }
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _targetBeneficiaryController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Target Beneficiaries',
-                      prefixIcon: Icon(Icons.people_outlined),
-                    ),
-                    validator: (v) {
-                      if (v != null && v.isNotEmpty) {
-                        if (int.tryParse(v) == null) {
-                          return 'Invalid number';
-                        }
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-
-            // ─── Save Button ───────────────────────────────────
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
-                onPressed: _isSaving ? null : () => _saveProject(existing),
-                icon: _isSaving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.check),
-                label:
-                    Text(widget.isEditing ? 'Update Project' : 'Create Project'),
-              ),
-            ),
-            const SizedBox(height: 40),
+            // ─── Campaign / Goal fields (collapsible) ─────────
+            _buildGoalSection(),
+            const SizedBox(height: 24),
           ],
         ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: _isSaving ? null : () => _saveProject(existing),
+              icon: _isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.check),
+              label:
+                  Text(widget.isEditing ? 'Update Project' : 'Create Project'),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoalSection() {
+    return AnimatedCrossFade(
+      duration: const Duration(milliseconds: 250),
+      crossFadeState:
+          _showGoalSection ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+      firstChild: InkWell(
+        onTap: () => setState(() => _showGoalSection = true),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+            border: Border.all(
+              color: AppTheme.primaryColor.withValues(alpha: 0.15),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.add_circle_outline,
+                  size: 20, color: AppTheme.primaryColor),
+              const SizedBox(width: 10),
+              Text(
+                '+ Add fundraising goal',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.primaryColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      secondChild: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(child: _buildSectionHeader('Goal & Targets')),
+              IconButton(
+                icon: const Icon(Icons.close, size: 18),
+                onPressed: () => setState(() => _showGoalSection = false),
+                tooltip: 'Collapse',
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _goalDescriptionController,
+            maxLines: 2,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+              labelText: 'Goal Description',
+              prefixIcon: Icon(Icons.flag_outlined),
+              hintText: 'e.g., Sponsor 50 students\' school fees',
+              alignLabelWithHint: true,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _targetAmountController,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    labelText: 'Target Amount (₹)',
+                    prefixIcon: Icon(Icons.currency_rupee),
+                  ),
+                  validator: (v) {
+                    if (v != null && v.isNotEmpty) {
+                      if (double.tryParse(v) == null) {
+                        return 'Invalid number';
+                      }
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextFormField(
+                  controller: _targetBeneficiaryController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Target Beneficiaries',
+                    prefixIcon: Icon(Icons.people_outlined),
+                  ),
+                  validator: (v) {
+                    if (v != null && v.isNotEmpty) {
+                      if (int.tryParse(v) == null) {
+                        return 'Invalid number';
+                      }
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

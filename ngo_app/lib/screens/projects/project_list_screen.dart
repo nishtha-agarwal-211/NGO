@@ -9,6 +9,7 @@ import '../../models/project.dart';
 import '../../models/enums.dart';
 import '../../services/project_service.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/scale_tap_wrapper.dart';
 
 /// Events screen — shows project categories as folder cards.
 /// Each card represents a category (e.g., Wednesday Food Donation, Health Camps).
@@ -275,13 +276,14 @@ class _CategoryFolderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+    return ScaleTapWrapper(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
@@ -408,6 +410,7 @@ class _CategoryFolderCard extends StatelessWidget {
                 ),
               ],
             ),
+          ),
           ),
         ),
       ),
