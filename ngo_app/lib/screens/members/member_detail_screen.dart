@@ -365,9 +365,7 @@ class _MemberDetailBody extends StatelessWidget {
               icon: Icons.chat,
               label: 'WhatsApp',
               color: const Color(0xFF25D366),
-              onTap: () => _launch(
-                'https://wa.me/${member.mobile.replaceAll(RegExp(r'[^0-9]'), '')}',
-              ),
+              onTap: () => CommunicationUtils.openWhatsApp(phone: member.mobile),
             ),
           ),
         ),

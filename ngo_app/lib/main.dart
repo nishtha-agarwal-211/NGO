@@ -98,7 +98,7 @@ class _NgoAppState extends ConsumerState<NgoApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.light, // Locked to light — dark mode needs a full Colors.white sweep first
+      themeMode: ThemeMode.system,
       builder: (context, child) => OfflineBannerWrapper(child: child ?? const SizedBox.shrink()),
       routerConfig: router,
     );

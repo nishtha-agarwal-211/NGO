@@ -32,6 +32,13 @@ class SupabaseConfig {
     defaultValue: 'sb_publishable_efra7-8leY8sgMVNwXNG_Q_1zXh5sz-',
   );
 
+  /// Validates that Supabase credentials are not blank.
+  static bool validateConfig() {
+    assert(supabaseUrl.isNotEmpty, 'SUPABASE_URL must not be empty.');
+    assert(supabaseAnonKey.isNotEmpty, 'SUPABASE_ANON_KEY must not be empty.');
+    return supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty;
+  }
+
   // Storage bucket names
   static const String eventPhotosBucket = 'event-photos';
   static const String eventVideosBucket = 'event-videos';

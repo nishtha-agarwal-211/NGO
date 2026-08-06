@@ -15,11 +15,13 @@ class MemberService {
 
   MemberService(this._client);
 
-  /// Fetch all members, ordered by name.
+  /// Fetch members, ordered by name, with optional server-side limit and offset pagination.
   Future<List<Member>> getMembers({
     String? searchQuery,
     MemberRole? roleFilter,
     bool? isActive,
+    int? limit,
+    int? offset,
   }) async {
     var query = _client
         .from(AppConstants.membersTable)
@@ -38,8 +40,17 @@ class MemberService {
       query = query.or('name.ilike.$term,mobile.ilike.$term,email.ilike.$term');
     }
 
-    final response = await query.order('name', ascending: true);
+    var orderedQuery = query.order('name', ascending: true);
 
+    if (limit != null && offset != null) {
+      final response = await orderedQuery.range(offset, offset + limit - 1);
+      return (response as List).map((json) => Member.fromJson(json)).toList();
+    } else if (limit != null) {
+      final response = await orderedQuery.limit(limit);
+      return (response as List).map((json) => Member.fromJson(json)).toList();
+    }
+
+    final response = await orderedQuery;
     return (response as List).map((json) => Member.fromJson(json)).toList();
   }
 

@@ -331,11 +331,23 @@ class PhotoService {
       );
 
       try {
-        await uploadPhoto(
-          eventId: eventId,
-          projectId: projectId,
-          file: files[i],
-        );
+        // Automatic retry loop for network dropouts in field environments
+        int attempts = 0;
+        bool success = false;
+        while (attempts < 3 && !success) {
+          try {
+            attempts++;
+            await uploadPhoto(
+              eventId: eventId,
+              projectId: projectId,
+              file: files[i],
+            );
+            success = true;
+          } catch (_) {
+            if (attempts >= 3) rethrow;
+            await Future.delayed(Duration(milliseconds: 500 * attempts));
+          }
+        }
 
         yield PhotoUploadProgress(
           current: i + 1,
@@ -347,7 +359,7 @@ class PhotoService {
           current: i,
           total: files.length,
           status: UploadStatus.error,
-          errorMessage: 'Failed to upload photo ${i + 1}. Please try again.',
+          errorMessage: 'Failed to upload photo ${i + 1} after retries. Check network connection.',
         );
       }
     }

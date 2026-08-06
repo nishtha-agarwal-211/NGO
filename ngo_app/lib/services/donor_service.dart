@@ -13,10 +13,12 @@ class DonorService {
 
   DonorService(this._client);
 
-  /// Fetch all donors, ordered by name.
+  /// Fetch donors, ordered by name, with optional limit and offset pagination.
   Future<List<Donor>> getDonors({
     String? searchQuery,
     DonorType? typeFilter,
+    int? limit,
+    int? offset,
   }) async {
     var query = _client
         .from(AppConstants.donorsTable)
@@ -31,7 +33,17 @@ class DonorService {
       query = query.or('name.ilike.$term,mobile.ilike.$term,email.ilike.$term');
     }
 
-    final response = await query.order('name', ascending: true);
+    var orderedQuery = query.order('name', ascending: true);
+
+    if (limit != null && offset != null) {
+      final response = await orderedQuery.range(offset, offset + limit - 1);
+      return (response as List).map((json) => Donor.fromJson(json)).toList();
+    } else if (limit != null) {
+      final response = await orderedQuery.limit(limit);
+      return (response as List).map((json) => Donor.fromJson(json)).toList();
+    }
+
+    final response = await orderedQuery;
     return (response as List).map((json) => Donor.fromJson(json)).toList();
   }
 
