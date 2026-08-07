@@ -158,7 +158,9 @@ class _DonorFormScreenState extends ConsumerState<DonorFormScreen> {
             // Donor type selector
             Text(
               'Donor Type',
-              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
             ),
             const SizedBox(height: 8),
             Row(
@@ -176,10 +178,10 @@ class _DonorFormScreenState extends ConsumerState<DonorFormScreen> {
                         decoration: BoxDecoration(
                           color: isSelected
                               ? AppTheme.accentColor
-                              : AppTheme.accentColor.withValues(alpha: 0.05),
+                              : AppTheme.accentColor.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                           border: Border.all(
-                            color: isSelected ? AppTheme.accentColor : AppTheme.dividerColor,
+                            color: isSelected ? AppTheme.accentColor : AppTheme.dynamicBorder(context),
                           ),
                         ),
                         child: Column(
@@ -187,7 +189,7 @@ class _DonorFormScreenState extends ConsumerState<DonorFormScreen> {
                             Icon(
                               type == DonorType.recurring ? Icons.repeat : Icons.looks_one_outlined,
                               size: 24,
-                              color: isSelected ? Colors.white : AppTheme.textSecondary,
+                              color: isSelected ? Colors.white : AppTheme.dynamicTextSecondary(context),
                             ),
                             const SizedBox(height: 6),
                             Text(
@@ -195,7 +197,7 @@ class _DonorFormScreenState extends ConsumerState<DonorFormScreen> {
                               style: GoogleFonts.inter(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: isSelected ? Colors.white : AppTheme.textSecondary,
+                                color: isSelected ? Colors.white : AppTheme.dynamicTextSecondary(context),
                               ),
                             ),
                           ],

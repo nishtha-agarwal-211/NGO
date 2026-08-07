@@ -495,20 +495,23 @@ class _TypeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
+        decoration: AppTheme.adaptiveCardDecoration(
+          context,
+          radius: AppTheme.radiusMedium,
+        ).copyWith(
           color: isSelected
-              ? AppTheme.primaryColor.withValues(alpha: 0.08)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              ? primary.withValues(alpha: 0.12)
+              : null,
           border: Border.all(
             color: isSelected
-                ? AppTheme.primaryColor
-                : AppTheme.dividerColor,
+                ? primary
+                : AppTheme.dynamicBorder(context),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -518,18 +521,18 @@ class _TypeCard extends StatelessWidget {
               icon,
               size: 32,
               color: isSelected
-                  ? AppTheme.primaryColor
-                  : AppTheme.textHint,
+                  ? primary
+                  : AppTheme.dynamicTextHint(context),
             ),
             const SizedBox(height: 8),
             Text(
               label,
               style: TextStyle(
                 fontWeight:
-                    isSelected ? FontWeight.w600 : FontWeight.w400,
+                    isSelected ? FontWeight.w700 : FontWeight.w500,
                 color: isSelected
-                    ? AppTheme.primaryColor
-                    : AppTheme.textSecondary,
+                    ? primary
+                    : AppTheme.dynamicTextSecondary(context),
               ),
             ),
           ],

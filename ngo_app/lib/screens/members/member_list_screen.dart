@@ -81,10 +81,13 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
                 controller: _searchController,
                 autofocus: true,
                 onChanged: _onSearchChanged,
-                style: GoogleFonts.inter(fontSize: 16),
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  color: AppTheme.dynamicTextPrimary(context),
+                ),
                 decoration: InputDecoration(
                   hintText: 'Search members...',
-                  hintStyle: GoogleFonts.inter(color: AppTheme.textHint),
+                  hintStyle: GoogleFonts.inter(color: AppTheme.dynamicTextHint(context)),
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
@@ -138,7 +141,7 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
                         Text(role.displayName),
                         if (_roleFilter == role) ...[
                           const Spacer(),
-                          const Icon(Icons.check, size: 18, color: AppTheme.primaryColor),
+                          Icon(Icons.check, size: 18, color: Theme.of(context).colorScheme.primary),
                         ],
                       ],
                     ),
@@ -191,6 +194,8 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
   }
 
   Widget _buildCountHeader(int count) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       child: Row(
@@ -198,15 +203,15 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
             ),
             child: Text(
               '$count member${count == 1 ? '' : 's'}',
               style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.primaryColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: primary,
               ),
             ),
           ),
@@ -215,7 +220,7 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
             Chip(
               label: Text(_roleFilter!.displayName),
               onDeleted: () => _setRoleFilter(null),
-              deleteIcon: const Icon(Icons.close, size: 16),
+              deleteIcon: const Icon(Icons.close, size: 14),
               visualDensity: VisualDensity.compact,
             ),
           ],
@@ -235,23 +240,17 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 48, color: AppTheme.errorColor),
+            const Icon(Icons.error_outline, size: 48, color: AppTheme.errorColor),
             const SizedBox(height: 16),
             Text(
               'Something went wrong',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
               ErrorUtils.friendlyMessage(error),
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: AppTheme.textSecondary,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -267,6 +266,7 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
 
   Widget _buildEmptyState() {
     final hasFilter = _searchQuery.isNotEmpty || _roleFilter != null;
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Center(
       child: Padding(
@@ -278,23 +278,19 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
+                color: primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
               ),
               child: Icon(
                 hasFilter ? Icons.search_off : Icons.people_outline,
                 size: 40,
-                color: AppTheme.primaryColor,
+                color: primary,
               ),
             ),
             const SizedBox(height: 24),
             Text(
               hasFilter ? 'No members found' : 'No members yet',
-              style: GoogleFonts.inter(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
-              ),
+              style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
@@ -302,10 +298,7 @@ class _MemberListScreenState extends ConsumerState<MemberListScreen> {
                   ? 'Try adjusting your search or filter'
                   : 'Tap the button below to add your first member',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: AppTheme.textSecondary,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
           ],
         ),
@@ -347,129 +340,125 @@ class _MemberCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScaleTapWrapper(
+      onTap: onTap,
+      pressedScale: 0.98,
+      enableHaptics: true,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        child: Material(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-              border: Border.all(
-                color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
-              ),
-            ),
-            child: Row(
-              children: [
-                // Avatar
-                _buildAvatar(),
-                const SizedBox(width: 14),
-                // Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              member.name,
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).textTheme.titleMedium?.color,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: AppTheme.adaptiveCardDecoration(
+            context,
+            radius: AppTheme.radiusLarge,
+          ),
+          child: Row(
+            children: [
+              // Avatar
+              _buildAvatar(context),
+              const SizedBox(width: 14),
+              // Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            member.name,
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        _buildRoleBadge(context),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.phone_outlined,
+                          size: 14,
+                          color: AppTheme.dynamicTextHint(context),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          member.mobile,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontSize: 13,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          _buildRoleBadge(),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.phone_outlined,
-                              size: 14, color: AppTheme.textHint),
-                          const SizedBox(width: 4),
-                          Text(
-                            member.mobile,
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              color: AppTheme.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (_hasBirthdayBadge || _hasAnniversaryBadge) ...[
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            if (_hasBirthdayBadge) _buildBirthdayBadge(),
-                            if (_hasBirthdayBadge && _hasAnniversaryBadge)
-                              const SizedBox(width: 6),
-                            if (_hasAnniversaryBadge) _buildAnniversaryBadge(),
-                          ],
                         ),
                       ],
+                    ),
+                    if (_hasBirthdayBadge || _hasAnniversaryBadge) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          if (_hasBirthdayBadge) _buildBirthdayBadge(),
+                          if (_hasBirthdayBadge && _hasAnniversaryBadge)
+                            const SizedBox(width: 6),
+                          if (_hasAnniversaryBadge) _buildAnniversaryBadge(),
+                        ],
+                      ),
                     ],
-                  ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                // Quick actions
-                _buildQuickActions(context),
-              ],
-            ),
-          ),
+              ),
+              const SizedBox(width: 8),
+              // Quick actions (haptic safe)
+              _buildQuickActions(context),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildAvatar() {
+  Widget _buildAvatar(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     if (member.photoUrl != null) {
       return CircleAvatar(
         radius: 24,
         backgroundImage: NetworkImage(member.photoUrl!),
-        backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+        backgroundColor: primary.withValues(alpha: 0.12),
       );
     }
 
     return CircleAvatar(
       radius: 24,
-      backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+      backgroundColor: primary.withValues(alpha: 0.12),
       child: Text(
         member.initials,
         style: GoogleFonts.inter(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: AppTheme.primaryColor,
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          color: primary,
         ),
       ),
     );
   }
 
-  Widget _buildRoleBadge() {
+  Widget _buildRoleBadge(BuildContext context) {
     Color bgColor;
     Color textColor;
+    final primary = Theme.of(context).colorScheme.primary;
 
     switch (member.role) {
       case MemberRole.admin:
-        bgColor = AppTheme.primaryColor.withValues(alpha: 0.12);
-        textColor = AppTheme.primaryColor;
+        bgColor = primary.withValues(alpha: 0.12);
+        textColor = primary;
         break;
       case MemberRole.volunteer:
         bgColor = AppTheme.accentColor.withValues(alpha: 0.12);
         textColor = AppTheme.accentColor;
         break;
       case MemberRole.member:
-        bgColor = Colors.grey.withValues(alpha: 0.1);
-        textColor = AppTheme.textSecondary;
+        bgColor = AppTheme.dynamicBorder(context);
+        textColor = AppTheme.dynamicTextSecondary(context);
         break;
     }
 
@@ -477,7 +466,7 @@ class _MemberCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
       ),
       child: Text(
         member.role.displayName,
@@ -501,13 +490,13 @@ class _MemberCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: AppTheme.warningColor.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
       ),
       child: Text(
         label,
         style: GoogleFonts.inter(
           fontSize: 11,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
           color: AppTheme.secondaryDark,
         ),
       ),
@@ -518,14 +507,14 @@ class _MemberCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.pink.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
+        color: Colors.pink.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
       ),
       child: Text(
         '💍 Anniversary',
         style: GoogleFonts.inter(
           fontSize: 11,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
           color: Colors.pink[700],
         ),
       ),
@@ -536,15 +525,15 @@ class _MemberCard extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Call
+        // Call action (disable haptics to prevent haptic spam when tapping rapidly)
         _QuickActionButton(
           icon: Icons.call_outlined,
           color: AppTheme.successColor,
           tooltip: 'Call',
           onTap: () => _launchAction('tel:${member.mobile}'),
         ),
-        const SizedBox(height: 4),
-        // WhatsApp
+        const SizedBox(height: 6),
+        // WhatsApp action
         _QuickActionButton(
           icon: Icons.chat_outlined,
           color: const Color(0xFF25D366),
@@ -580,15 +569,16 @@ class _QuickActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Tooltip(
       message: tooltip,
-      child: InkWell(
+      child: ScaleTapWrapper(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        pressedScale: 0.92,
+        enableHaptics: false, // Prevents haptic spam when tapping back to back
         child: Container(
-          width: 32,
-          height: 32,
+          width: 34,
+          height: 34,
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+            color: color.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
           ),
           child: Icon(icon, size: 16, color: color),
         ),
@@ -596,3 +586,4 @@ class _QuickActionButton extends StatelessWidget {
     );
   }
 }
+

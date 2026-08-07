@@ -7,15 +7,6 @@ import '../services/member_service.dart';
 
 /// Volunteer picker widget — lets admin select members from the directory
 /// or type ad-hoc volunteer names.
-///
-/// Usage:
-/// ```dart
-/// VolunteerPicker(
-///   onMemberSelected: (memberId) => ...,
-///   onAdHocAdded: (name) => ...,
-///   excludeMemberIds: {'already-added-id-1'},
-/// )
-/// ```
 class VolunteerPicker extends ConsumerStatefulWidget {
   /// Callback when a member is selected from the list.
   final void Function(String memberId, String memberName) onMemberSelected;
@@ -62,11 +53,9 @@ class _VolunteerPickerState extends ConsumerState<VolunteerPicker> {
             Expanded(
               child: Text(
                 'Add Volunteer',
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
-                ),
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
               ),
             ),
             TextButton.icon(
@@ -99,17 +88,15 @@ class _VolunteerPickerState extends ConsumerState<VolunteerPicker> {
                 child: TextFormField(
                   controller: _adHocController,
                   textCapitalization: TextCapitalization.words,
+                  style: TextStyle(color: AppTheme.dynamicTextPrimary(context)),
                   decoration: InputDecoration(
                     hintText: 'Enter volunteer name',
-                    prefixIcon: const Icon(Icons.person_outline, size: 20),
+                    hintStyle: TextStyle(color: AppTheme.dynamicTextHint(context)),
+                    prefixIcon: Icon(Icons.person_outline, size: 20, color: AppTheme.dynamicTextHint(context)),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 12,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.radiusMedium),
                     ),
                   ),
                   onFieldSubmitted: (value) {
@@ -144,20 +131,19 @@ class _VolunteerPickerState extends ConsumerState<VolunteerPicker> {
           // ─── Member search + list ─────────────────────────────
           TextFormField(
             controller: _searchController,
+            style: TextStyle(color: AppTheme.dynamicTextPrimary(context)),
             decoration: InputDecoration(
               hintText: 'Search members...',
-              prefixIcon: const Icon(Icons.search, size: 20),
+              hintStyle: TextStyle(color: AppTheme.dynamicTextHint(context)),
+              prefixIcon: Icon(Icons.search, size: 20, color: AppTheme.dynamicTextHint(context)),
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
                 vertical: 12,
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-              ),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
-                      icon: const Icon(Icons.clear, size: 18),
+                      icon: Icon(Icons.clear, size: 18, color: AppTheme.dynamicTextHint(context)),
                       onPressed: () {
                         _searchController.clear();
                         setState(() => _searchQuery = '');
@@ -198,20 +184,19 @@ class _VolunteerPickerState extends ConsumerState<VolunteerPicker> {
               _searchQuery.isNotEmpty
                   ? 'No matching members found'
                   : 'All members are already added',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: AppTheme.textHint,
-              ),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           );
         }
+
+        final primary = Theme.of(context).colorScheme.primary;
 
         return ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 200),
           child: ListView.separated(
             shrinkWrap: true,
             itemCount: available.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
+            separatorBuilder: (_, __) => Divider(height: 1, color: AppTheme.dynamicBorder(context)),
             itemBuilder: (context, index) {
               final member = available[index];
               return ListTile(
@@ -220,32 +205,27 @@ class _VolunteerPickerState extends ConsumerState<VolunteerPicker> {
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
                 leading: CircleAvatar(
                   radius: 18,
-                  backgroundColor:
-                      AppTheme.primaryColor.withValues(alpha: 0.1),
+                  backgroundColor: primary.withValues(alpha: 0.12),
                   child: Text(
                     member.name.isNotEmpty
                         ? member.name[0].toUpperCase()
                         : '?',
                     style: GoogleFonts.inter(
                       fontWeight: FontWeight.w700,
-                      color: AppTheme.primaryColor,
+                      color: primary,
                       fontSize: 14,
                     ),
                   ),
                 ),
                 title: Text(
                   member.name,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
                 subtitle: Text(
                   member.role.displayName,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppTheme.textHint,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 trailing: IconButton(
                   icon: const Icon(
@@ -286,3 +266,4 @@ class _VolunteerPickerState extends ConsumerState<VolunteerPicker> {
     );
   }
 }
+

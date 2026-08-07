@@ -13,6 +13,7 @@ import '../../services/donor_service.dart';
 import '../../services/auth_service.dart';
 import '../../utils/error_utils.dart';
 import '../../utils/communication_utils.dart';
+import '../../widgets/scale_tap_wrapper.dart';
 
 /// Donor profile screen with contact info, donation history, and totals.
 class DonorDetailScreen extends ConsumerWidget {
@@ -50,9 +51,9 @@ class DonorDetailScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.person_off_outlined, size: 64, color: AppTheme.textHint),
+          Icon(Icons.person_off_outlined, size: 64, color: AppTheme.dynamicTextHint(context)),
           const SizedBox(height: 16),
-          Text('Donor not found', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600)),
+          Text('Donor not found', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () => context.pop(),
@@ -68,7 +69,7 @@ class DonorDetailScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLarge)),
         title: const Text('Delete Donor?'),
         content: Text('Are you sure you want to delete ${donor.name}? This will also remove all their donation records.'),
         actions: [
@@ -130,43 +131,44 @@ class _DonorDetailBody extends StatelessWidget {
                 const SizedBox(height: 20),
 
                 // Quick actions
-                _buildQuickActions(),
+                _buildQuickActions(context),
                 const SizedBox(height: 24),
 
                 // Stats row
-                _buildStatsRow(),
+                _buildStatsRow(context),
                 const SizedBox(height: 24),
 
                 // Contact info
-                _buildSectionHeader('Contact Information'),
+                _buildSectionHeader(context, 'Contact Information'),
                 const SizedBox(height: 12),
                 _buildInfoCard(context),
                 const SizedBox(height: 24),
 
                 // Notes
                 if (donor.notes != null && donor.notes!.isNotEmpty) ...[
-                  _buildSectionHeader('Notes'),
+                  _buildSectionHeader(context, 'Notes'),
                   const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-                      boxShadow: AppTheme.cardShadow,
+                    decoration: AppTheme.adaptiveCardDecoration(
+                      context,
+                      radius: AppTheme.radiusLarge,
                     ),
                     child: Text(
                       donor.notes!,
-                      style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textSecondary, height: 1.5),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            height: 1.5,
+                          ),
                     ),
                   ),
                   const SizedBox(height: 24),
                 ],
 
                 // Donation history
-                _buildSectionHeader('Donation History'),
+                _buildSectionHeader(context, 'Donation History'),
                 const SizedBox(height: 12),
-                _buildDonationHistory(),
+                _buildDonationHistory(context),
                 const SizedBox(height: 100),
               ],
             ),
@@ -221,7 +223,7 @@ class _DonorDetailBody extends StatelessWidget {
                 const SizedBox(height: 40),
                 CircleAvatar(
                   radius: 40,
-                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                  backgroundColor: Colors.white.withValues(alpha: 0.25),
                   child: Text(
                     donor.initials,
                     style: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white),
@@ -237,11 +239,11 @@ class _DonorDetailBody extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                   ),
                   child: Text(
                     donor.donorType.displayName,
-                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white),
+                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
                   ),
                 ),
               ],
@@ -252,7 +254,9 @@ class _DonorDetailBody extends StatelessWidget {
     );
   }
 
-  Widget _buildQuickActions() {
+  Widget _buildQuickActions(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Row(
       children: [
         Expanded(
@@ -282,7 +286,7 @@ class _DonorDetailBody extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: _QuickActionCard(
-            icon: Icons.sms_outlined, label: 'SMS', color: AppTheme.primaryColor,
+            icon: Icons.sms_outlined, label: 'SMS', color: primary,
             onTap: () => _launch('sms:${donor.mobile}'),
           ),
         ),
@@ -290,14 +294,13 @@ class _DonorDetailBody extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsRow() {
+  Widget _buildStatsRow(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppTheme.accentColor, Color(0xFF26A69A)],
-        ),
+        gradient: AppTheme.accentGradient,
         borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        boxShadow: AppTheme.adaptiveCardShadow(context),
       ),
       child: Row(
         children: [
@@ -315,7 +318,7 @@ class _DonorDetailBody extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   'Total Donated',
-                  style: GoogleFonts.inter(fontSize: 12, color: Colors.white70),
+                  style: GoogleFonts.inter(fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -335,7 +338,7 @@ class _DonorDetailBody extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   'Donor Type',
-                  style: GoogleFonts.inter(fontSize: 12, color: Colors.white70),
+                  style: GoogleFonts.inter(fontSize: 12, color: Colors.white70, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -347,19 +350,19 @@ class _DonorDetailBody extends StatelessWidget {
 
   Widget _buildInfoCard(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        boxShadow: AppTheme.cardShadow,
+      decoration: AppTheme.adaptiveCardDecoration(
+        context,
+        radius: AppTheme.radiusLarge,
       ),
       child: Column(
         children: [
-          _buildInfoRow(Icons.phone_outlined, 'Mobile', donor.mobile),
+          _buildInfoRow(context, Icons.phone_outlined, 'Mobile', donor.mobile),
           if (donor.email != null)
-            _buildInfoRow(Icons.email_outlined, 'Email', donor.email!),
+            _buildInfoRow(context, Icons.email_outlined, 'Email', donor.email!),
           if (donor.address != null)
-            _buildInfoRow(Icons.location_on_outlined, 'Address', donor.address!),
+            _buildInfoRow(context, Icons.location_on_outlined, 'Address', donor.address!),
           _buildInfoRow(
+            context,
             Icons.calendar_today_outlined,
             'Added',
             DateFormat('MMM d, yyyy').format(donor.createdAt),
@@ -369,7 +372,7 @@ class _DonorDetailBody extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value) {
+  Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
@@ -377,8 +380,8 @@ class _DonorDetailBody extends StatelessWidget {
           Container(
             width: 36, height: 36,
             decoration: BoxDecoration(
-              color: AppTheme.accentColor.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
+              color: AppTheme.accentColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
             ),
             child: Icon(icon, size: 18, color: AppTheme.accentColor),
           ),
@@ -387,9 +390,9 @@ class _DonorDetailBody extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textHint, fontWeight: FontWeight.w500)),
+                Text(label, style: Theme.of(context).textTheme.bodySmall),
                 const SizedBox(height: 2),
-                Text(value, style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textPrimary, fontWeight: FontWeight.w500)),
+                Text(value, style: Theme.of(context).textTheme.titleSmall),
               ],
             ),
           ),
@@ -398,31 +401,34 @@ class _DonorDetailBody extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Text(
       title,
-      style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
     );
   }
 
-  Widget _buildDonationHistory() {
+  Widget _buildDonationHistory(BuildContext context) {
     return donationsAsync.when(
       data: (donations) {
         if (donations.isEmpty) {
           return Container(
             width: double.infinity,
             padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-              boxShadow: AppTheme.cardShadow,
+            decoration: AppTheme.adaptiveCardDecoration(
+              context,
+              radius: AppTheme.radiusLarge,
             ),
             child: Column(
               children: [
-                Icon(Icons.receipt_long_outlined, size: 40, color: AppTheme.textHint),
+                Icon(Icons.receipt_long_outlined, size: 40, color: AppTheme.dynamicTextHint(context)),
                 const SizedBox(height: 12),
-                Text('No donations recorded yet',
-                    style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textSecondary)),
+                Text(
+                  'No donations recorded yet',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
               ],
             ),
           );
@@ -432,7 +438,10 @@ class _DonorDetailBody extends StatelessWidget {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-      error: (e, _) => Text('Error loading donations: $e'),
+      error: (e, _) => Text(
+        'Error loading donations: $e',
+        style: TextStyle(color: AppTheme.errorColor),
+      ),
     );
   }
 
@@ -464,18 +473,17 @@ class _DonationTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          boxShadow: AppTheme.cardShadow,
+        decoration: AppTheme.adaptiveCardDecoration(
+          context,
+          radius: AppTheme.radiusMedium,
         ),
         child: Row(
           children: [
             Container(
               width: 40, height: 40,
               decoration: BoxDecoration(
-                color: _typeColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+                color: _typeColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
               ),
               child: Icon(_typeIcon, size: 20, color: _typeColor),
             ),
@@ -486,17 +494,19 @@ class _DonationTile extends StatelessWidget {
                 children: [
                   Text(
                     donation.donationType.displayName,
-                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     DateFormat('MMM d, yyyy').format(donation.donationDate),
-                    style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary),
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
                   if (donation.projectName != null)
                     Text(
                       donation.projectName!,
-                      style: GoogleFonts.inter(fontSize: 11, color: AppTheme.accentColor),
+                      style: GoogleFonts.inter(fontSize: 11, color: AppTheme.accentColor, fontWeight: FontWeight.w500),
                     ),
                 ],
               ),
@@ -544,23 +554,32 @@ class _QuickActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: color.withValues(alpha: 0.08),
-      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 22),
-              const SizedBox(height: 6),
-              Text(label, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: color)),
-            ],
+    return ScaleTapWrapper(
+      onTap: onTap,
+      pressedScale: 0.94,
+      enableHaptics: false,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+          border: Border.all(
+            color: color.withValues(alpha: 0.25),
+            width: 1,
           ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: color),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+

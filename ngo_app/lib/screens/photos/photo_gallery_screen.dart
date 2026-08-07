@@ -71,6 +71,7 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLarge)),
         title: Text('Delete ${selectedPhotos.length} item(s)?'),
         content: Text(
           'Are you sure you want to delete ${selectedPhotos.length} selected item(s)? This action cannot be undone.',

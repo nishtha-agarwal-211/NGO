@@ -13,11 +13,15 @@ class ScaleTapWrapper extends StatefulWidget {
   /// Scale factor when the widget is pressed. Default is 0.98 for a subtle effect.
   final double pressedScale;
 
+  /// Whether to fire haptic feedback on tap down.
+  final bool enableHaptics;
+
   const ScaleTapWrapper({
     super.key,
     required this.child,
     this.onTap,
     this.pressedScale = 0.98,
+    this.enableHaptics = true,
   });
 
   @override
@@ -54,7 +58,9 @@ class _ScaleTapWrapperState extends State<ScaleTapWrapper>
 
   void _onTapDown(TapDownDetails _) {
     _controller.forward();
-    HapticFeedback.selectionClick();
+    if (widget.enableHaptics) {
+      HapticFeedback.selectionClick();
+    }
   }
   void _onTapUp(TapUpDetails _) => _controller.reverse();
   void _onTapCancel() => _controller.reverse();
@@ -73,3 +79,4 @@ class _ScaleTapWrapperState extends State<ScaleTapWrapper>
     );
   }
 }
+

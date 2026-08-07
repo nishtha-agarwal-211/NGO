@@ -37,9 +37,9 @@ class EventFolderScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.folder_off_outlined, size: 64, color: AppTheme.textHint),
+                  Icon(Icons.folder_off_outlined, size: 64, color: AppTheme.dynamicTextHint(context)),
                   const SizedBox(height: 16),
-                  Text('Category not found', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600)),
+                  Text('Category not found', style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: () => context.pop(),
@@ -74,7 +74,7 @@ class EventFolderScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLarge)),
         title: const Text('Delete Category?'),
         content: Text('Are you sure you want to delete "${project.name}"? This will also delete all associated events and photos.'),
         actions: [
@@ -174,7 +174,7 @@ class _EventFolderBody extends StatelessWidget {
                           width: 52, height: 52,
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                           ),
                           child: Icon(
                             project.isRecurring ? Icons.repeat : Icons.event,
@@ -221,19 +221,20 @@ class _EventFolderBody extends StatelessWidget {
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                    boxShadow: AppTheme.adaptiveCardShadow(context),
+                  decoration: AppTheme.adaptiveCardDecoration(
+                    context,
+                    radius: AppTheme.radiusMedium,
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, size: 18, color: _headerColor.withValues(alpha: 0.6)),
+                      Icon(Icons.info_outline, size: 18, color: _headerColor.withValues(alpha: 0.8)),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           project.description!,
-                          style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary, height: 1.4),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                height: 1.4,
+                              ),
                         ),
                       ),
                     ],
@@ -252,25 +253,23 @@ class _EventFolderBody extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     'Events',
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Theme.of(context).textTheme.titleMedium?.color,
-                      ),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
                   const Spacer(),
                   eventsAsync.whenOrNull(
                     data: (events) => Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: _headerColor.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(10),
+                        color: _headerColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                       ),
                       child: Text(
                         '${events.length} event${events.length == 1 ? '' : 's'}',
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                           color: _headerColor,
                         ),
                       ),
@@ -291,23 +290,22 @@ class _EventFolderBody extends StatelessWidget {
                     child: Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(40),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-                        boxShadow: AppTheme.adaptiveCardShadow(context),
+                      decoration: AppTheme.adaptiveCardDecoration(
+                        context,
+                        radius: AppTheme.radiusLarge,
                       ),
                       child: Column(
                         children: [
-                          Icon(Icons.folder_open_outlined, size: 48, color: AppTheme.textHint.withValues(alpha: 0.5)),
+                          Icon(Icons.folder_open_outlined, size: 48, color: AppTheme.dynamicTextHint(context)),
                           const SizedBox(height: 16),
                           Text(
                             'No events yet',
-                            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const SizedBox(height: 6),
                           Text(
                             'Tap + to add the first event',
-                            style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textHint),
+                            style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
                       ),
@@ -345,7 +343,7 @@ class _EventFolderBody extends StatelessWidget {
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.all(40),
-                  child: Text('Error loading events: $e'),
+                  child: Text('Error loading events: $e', style: TextStyle(color: AppTheme.errorColor)),
                 ),
               ),
             ),
@@ -370,11 +368,11 @@ class _EventFolderBody extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
       ),
       child: Text(
         label,
-        style: GoogleFonts.inter(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w500),
+        style: GoogleFonts.inter(fontSize: 12, color: Colors.white, fontWeight: FontWeight.w600),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -423,12 +421,10 @@ class _MonthSection extends StatelessWidget {
             padding: const EdgeInsets.only(top: 8, bottom: 8),
             child: Text(
               monthLabel,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textSecondary,
-                letterSpacing: 0.5,
-              ),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
             ),
           ),
           // Event date folders
@@ -457,12 +453,9 @@ class _DateFolderTile extends StatelessWidget {
   });
 
   @override
-  @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('EEE, MMM d, yyyy');
     final effectiveStatus = event.effectiveStatus;
-    final isCompleted = effectiveStatus == EventStatus.completed;
-    final isUpcoming = effectiveStatus == EventStatus.upcoming;
     final isCancelled = effectiveStatus == EventStatus.cancelled;
 
     final dateSub = event.formattedTimeRange.isNotEmpty
@@ -471,143 +464,122 @@ class _DateFolderTile extends StatelessWidget {
 
     return ScaleTapWrapper(
       onTap: onTap,
+      pressedScale: 0.98,
+      enableHaptics: true,
       child: Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-              border: Border.all(
-                color: isCompleted
-                    ? AppTheme.successColor.withValues(alpha: 0.15)
-                    : isUpcoming
-                        ? accentColor.withValues(alpha: 0.12)
-                        : AppTheme.textHint.withValues(alpha: 0.15),
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: AppTheme.adaptiveCardDecoration(
+            context,
+            radius: AppTheme.radiusMedium,
+          ),
+          child: Row(
+            children: [
+              // Date block (mini calendar style)
+              Container(
+                width: 52, height: 56,
+                decoration: BoxDecoration(
+                  color: _statusColor(effectiveStatus).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      DateFormat('MMM').format(event.eventDate).toUpperCase(),
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: _statusColor(effectiveStatus),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    Text(
+                      '${event.eventDate.day}',
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: _statusColor(effectiveStatus),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.primaryColor.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                // Date block (like a mini calendar)
-                Container(
-                  width: 52, height: 56,
-                  decoration: BoxDecoration(
-                    color: _statusColor(effectiveStatus).withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        DateFormat('MMM').format(event.eventDate).toUpperCase(),
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: _statusColor(effectiveStatus),
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      Text(
-                        '${event.eventDate.day}',
-                        style: GoogleFonts.inter(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                          color: _statusColor(effectiveStatus),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 14),
-                // Event info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        event.displayTitle,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
-                          decoration: isCancelled ? TextDecoration.lineThrough : null,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        dateSub,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppTheme.textHint,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      // Info chips row
-                      Row(
-                        children: [
-                          _infoChip(
-                            effectiveStatus.displayName,
-                            color: _statusColor(effectiveStatus),
-                            icon: _statusIcon(effectiveStatus),
+              const SizedBox(width: 14),
+              // Event info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      event.displayTitle,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            decoration: isCancelled ? TextDecoration.lineThrough : null,
                           ),
-                          if (event.beneficiaryCount > 0) ...[
-                            const SizedBox(width: 6),
-                            _infoChip(
-                              '${event.beneficiaryCount} served',
-                              color: AppTheme.accentColor,
-                              icon: Icons.groups_outlined,
-                            ),
-                          ],
-                          if (event.location != null) ...[
-                            const SizedBox(width: 6),
-                            Flexible(
-                              child: _infoChip(
-                                event.location!,
-                                color: AppTheme.textSecondary,
-                                icon: Icons.location_on_outlined,
-                              ),
-                            ),
-                          ],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      dateSub,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 6),
+                    // Info chips row
+                    Row(
+                      children: [
+                        _infoChip(
+                          context,
+                          effectiveStatus.displayName,
+                          color: _statusColor(effectiveStatus),
+                          icon: _statusIcon(effectiveStatus),
+                        ),
+                        if (event.beneficiaryCount > 0) ...[
+                          const SizedBox(width: 6),
+                          _infoChip(
+                            context,
+                            '${event.beneficiaryCount} served',
+                            color: AppTheme.accentColor,
+                            icon: Icons.groups_outlined,
+                          ),
                         ],
-                      ),
-                    ],
-                  ),
+                        if (event.location != null) ...[
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: _infoChip(
+                              context,
+                              event.location!,
+                              color: AppTheme.dynamicTextSecondary(context),
+                              icon: Icons.location_on_outlined,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
                 ),
-                // Folder arrow
-                Icon(
-                  Icons.chevron_right,
-                  color: AppTheme.textHint.withValues(alpha: 0.5),
-                  size: 22,
-                ),
-              ],
-            ),
+              ),
+              // Folder arrow
+              Icon(
+                Icons.chevron_right,
+                color: AppTheme.dynamicTextHint(context),
+                size: 22,
+              ),
+            ],
           ),
         ),
-      ),
       ),
     );
   }
 
-  Widget _infoChip(String label, {required Color color, required IconData icon}) {
+  Widget _infoChip(BuildContext context, String label, {required Color color, required IconData icon}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(6),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -643,3 +615,4 @@ class _DateFolderTile extends StatelessWidget {
     }
   }
 }
+

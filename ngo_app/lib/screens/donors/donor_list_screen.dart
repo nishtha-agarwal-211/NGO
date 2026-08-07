@@ -80,10 +80,13 @@ class _DonorListScreenState extends ConsumerState<DonorListScreen> {
                 controller: _searchController,
                 autofocus: true,
                 onChanged: _onSearchChanged,
-                style: GoogleFonts.inter(fontSize: 16),
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  color: AppTheme.dynamicTextPrimary(context),
+                ),
                 decoration: InputDecoration(
                   hintText: 'Search donors...',
-                  hintStyle: GoogleFonts.inter(color: AppTheme.textHint),
+                  hintStyle: GoogleFonts.inter(color: AppTheme.dynamicTextHint(context)),
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
@@ -139,7 +142,7 @@ class _DonorListScreenState extends ConsumerState<DonorListScreen> {
                         Text(type.displayName),
                         if (_typeFilter == type) ...[
                           const Spacer(),
-                          const Icon(Icons.check, size: 18, color: AppTheme.primaryColor),
+                          Icon(Icons.check, size: 18, color: Theme.of(context).colorScheme.primary),
                         ],
                       ],
                     ),
@@ -191,14 +194,14 @@ class _DonorListScreenState extends ConsumerState<DonorListScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppTheme.accentColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: AppTheme.accentColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
             ),
             child: Text(
               '$count donor${count == 1 ? '' : 's'}',
               style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
                 color: AppTheme.accentColor,
               ),
             ),
@@ -208,7 +211,7 @@ class _DonorListScreenState extends ConsumerState<DonorListScreen> {
             Chip(
               label: Text(_typeFilter!.displayName),
               onDeleted: () => _setTypeFilter(null),
-              deleteIcon: const Icon(Icons.close, size: 16),
+              deleteIcon: const Icon(Icons.close, size: 14),
               visualDensity: VisualDensity.compact,
             ),
           ],
@@ -231,11 +234,11 @@ class _DonorListScreenState extends ConsumerState<DonorListScreen> {
             const Icon(Icons.error_outline, size: 48, color: AppTheme.errorColor),
             const SizedBox(height: 16),
             Text('Something went wrong',
-                style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600)),
+                style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(ErrorUtils.friendlyMessage(error),
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textSecondary)),
+                style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () => ref.invalidate(donorListProvider),
@@ -260,8 +263,8 @@ class _DonorListScreenState extends ConsumerState<DonorListScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppTheme.accentColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
+                color: AppTheme.accentColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
               ),
               child: Icon(
                 hasFilter ? Icons.search_off : Icons.volunteer_activism_outlined,
@@ -272,7 +275,7 @@ class _DonorListScreenState extends ConsumerState<DonorListScreen> {
             const SizedBox(height: 24),
             Text(
               hasFilter ? 'No donors found' : 'No donors yet',
-              style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+              style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
@@ -280,7 +283,7 @@ class _DonorListScreenState extends ConsumerState<DonorListScreen> {
                   ? 'Try adjusting your search or filter'
                   : 'Tap the button below to add your first donor',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textSecondary),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
           ],
         ),
@@ -300,108 +303,108 @@ class _DonorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScaleTapWrapper(
+      onTap: onTap,
+      pressedScale: 0.98,
+      enableHaptics: true,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        child: Material(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-              border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.5)),
-            ),
-            child: Row(
-              children: [
-                // Avatar
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: AppTheme.accentColor.withValues(alpha: 0.1),
-                  child: Text(
-                    donor.initials,
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.accentColor,
-                    ),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: AppTheme.adaptiveCardDecoration(
+            context,
+            radius: AppTheme.radiusLarge,
+          ),
+          child: Row(
+            children: [
+              // Avatar
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: AppTheme.accentColor.withValues(alpha: 0.12),
+                child: Text(
+                  donor.initials,
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.accentColor,
                   ),
                 ),
-                const SizedBox(width: 14),
-                // Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              donor.name,
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).textTheme.titleMedium?.color,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          _buildTypeBadge(),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.phone_outlined, size: 14, color: AppTheme.textHint),
-                          const SizedBox(width: 4),
-                          Text(
-                            donor.mobile,
-                            style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Quick actions
-                Column(
-                  mainAxisSize: MainAxisSize.min,
+              ),
+              const SizedBox(width: 14),
+              // Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildQuickAction(
-                      icon: Icons.call_outlined,
-                      color: AppTheme.successColor,
-                      onTap: () => _launch('tel:${donor.mobile}'),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            donor.name,
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        _buildTypeBadge(context),
+                      ],
                     ),
                     const SizedBox(height: 4),
-                    _buildQuickAction(
-                      icon: Icons.chat_outlined,
-                      color: const Color(0xFF25D366),
-                      onTap: () => _launch(
-                        'https://wa.me/${donor.mobile.replaceAll(RegExp(r'[^0-9]'), '')}',
-                      ),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.phone_outlined,
+                          size: 14,
+                          color: AppTheme.dynamicTextHint(context),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          donor.mobile,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontSize: 13,
+                              ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
+              ),
+              const SizedBox(width: 8),
+              // Quick actions (haptic safe)
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildQuickAction(
+                    icon: Icons.call_outlined,
+                    color: AppTheme.successColor,
+                    onTap: () => _launch('tel:${donor.mobile}'),
+                  ),
+                  const SizedBox(height: 6),
+                  _buildQuickAction(
+                    icon: Icons.chat_outlined,
+                    color: const Color(0xFF25D366),
+                    onTap: () => _launch(
+                      'https://wa.me/${donor.mobile.replaceAll(RegExp(r'[^0-9]'), '')}',
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildTypeBadge() {
+  Widget _buildTypeBadge(BuildContext context) {
     final isRecurring = donor.donorType == DonorType.recurring;
+    final badgeColor = isRecurring ? AppTheme.accentColor : AppTheme.dynamicTextSecondary(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: (isRecurring ? AppTheme.accentColor : AppTheme.textSecondary).withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(6),
+        color: (isRecurring ? AppTheme.accentColor : AppTheme.dynamicBorder(context)).withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -409,7 +412,7 @@ class _DonorCard extends StatelessWidget {
           Icon(
             isRecurring ? Icons.repeat : Icons.looks_one_outlined,
             size: 12,
-            color: isRecurring ? AppTheme.accentColor : AppTheme.textSecondary,
+            color: badgeColor,
           ),
           const SizedBox(width: 4),
           Text(
@@ -417,7 +420,7 @@ class _DonorCard extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: isRecurring ? AppTheme.accentColor : AppTheme.textSecondary,
+              color: badgeColor,
             ),
           ),
         ],
@@ -430,15 +433,16 @@ class _DonorCard extends StatelessWidget {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return ScaleTapWrapper(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      pressedScale: 0.92,
+      enableHaptics: false,
       child: Container(
-        width: 32,
-        height: 32,
+        width: 34,
+        height: 34,
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
         ),
         child: Icon(icon, size: 16, color: color),
       ),
@@ -452,3 +456,4 @@ class _DonorCard extends StatelessWidget {
     }
   }
 }
+

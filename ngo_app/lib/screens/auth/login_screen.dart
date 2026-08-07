@@ -49,7 +49,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       CurvedAnimation(parent: _animController, curve: Curves.easeOut),
     );
     _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.3),
+      begin: const Offset(0, 0.2),
       end: Offset.zero,
     ).animate(
       CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
@@ -128,20 +128,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppTheme.primaryColor,
-              Color(0xFF283593),
-              Color(0xFF1565C0),
-            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: isDark
+                ? const [
+                    AppTheme.darkScaffoldBg,
+                    Color(0xFF0D1428),
+                    AppTheme.darkSurface,
+                  ]
+                : const [
+                    AppTheme.primaryDark,
+                    AppTheme.primaryColor,
+                    Color(0xFF283593),
+                  ],
           ),
         ),
         child: SafeArea(
@@ -155,26 +162,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Logo / App Name
+                      // Logo / App Name Header
                       Container(
                         width: 110,
                         height: 110,
+                        padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.white,
                           shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.15),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            width: 2,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 20,
-                              offset: const Offset(0, 4),
+                              color: AppTheme.secondaryColor.withValues(alpha: 0.3),
+                              blurRadius: 24,
+                              spreadRadius: 2,
                             ),
                           ],
                         ),
                         child: ClipOval(
                           child: Image.asset(
                             'assets/images/logo.jpg',
-                            width: 110,
-                            height: 110,
+                            width: 102,
+                            height: 102,
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -193,7 +205,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       Text(
                         'नर सेवा, नारायण सेवा',
                         style: GoogleFonts.inter(
-                          fontSize: 16,
+                          fontSize: 15,
                           fontWeight: FontWeight.w500,
                           color: Colors.white.withValues(alpha: 0.85),
                           letterSpacing: 0.5,
@@ -201,20 +213,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       ),
                       const SizedBox(height: AppTheme.spacingXL),
 
-                      // Login Card
+                      // Login Card (Adaptive Surface)
                       Container(
                         width: size.width > 400 ? 400 : double.infinity,
                         padding: const EdgeInsets.all(AppTheme.spacingLG),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.15),
-                              blurRadius: 30,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
+                        decoration: AppTheme.adaptiveCardDecoration(
+                          context,
+                          radius: AppTheme.radiusXLarge,
                         ),
                         child: Form(
                           key: _formKey,
@@ -223,28 +228,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             children: [
                               Text(
                                 'Welcome Back',
-                                style: GoogleFonts.inter(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppTheme.textPrimary,
-                                ),
+                                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 'Sign in to continue',
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  color: AppTheme.textSecondary,
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium,
                               ),
                               const SizedBox(height: AppTheme.spacingLG),
 
-                              // Error Message
+                              // Error Message Banner
                               if (_errorMessage != null) ...[
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.errorColor.withValues(alpha: 0.08),
+                                    color: AppTheme.errorColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                                     border: Border.all(
                                       color: AppTheme.errorColor.withValues(alpha: 0.3),
@@ -252,7 +252,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(
+                                      const Icon(
                                         Icons.error_outline,
                                         size: 18,
                                         color: AppTheme.errorColor,
@@ -264,6 +264,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                           style: GoogleFonts.inter(
                                             fontSize: 13,
                                             color: AppTheme.errorColor,
+                                            fontWeight: FontWeight.w500,
                                           ),
                                         ),
                                       ),
@@ -330,13 +331,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                 height: 52,
                                 child: ElevatedButton(
                                   onPressed: _isLoading ? null : _handleLogin,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppTheme.primaryColor,
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                                    ),
-                                  ),
                                   child: _isLoading
                                       ? const SizedBox(
                                           width: 24,
@@ -365,10 +359,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                     padding: const EdgeInsets.symmetric(horizontal: 16),
                                     child: Text(
                                       'or continue with',
-                                      style: GoogleFonts.inter(
-                                        color: AppTheme.textSecondary,
-                                        fontSize: 13,
-                                      ),
+                                      style: Theme.of(context).textTheme.bodySmall,
                                     ),
                                   ),
                                   const Expanded(child: Divider()),
@@ -382,13 +373,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                 child: OutlinedButton(
                                   onPressed: _isLoading ? null : _handleGoogleSignIn,
                                   style: OutlinedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: AppTheme.textPrimary,
-                                    side: BorderSide(color: Colors.grey.shade300, width: 1),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                                    backgroundColor: AppTheme.dynamicCardColor(context),
+                                    foregroundColor: AppTheme.dynamicTextPrimary(context),
+                                    side: BorderSide(
+                                      color: AppTheme.dynamicBorder(context),
+                                      width: 1,
                                     ),
-                                    elevation: 0,
                                   ),
                                   child: FittedBox(
                                     fit: BoxFit.scaleDown,
@@ -405,9 +395,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                         Text(
                                           'Sign in with Google',
                                           style: GoogleFonts.inter(
-                                            fontSize: 16,
+                                            fontSize: 15,
                                             fontWeight: FontWeight.w600,
-                                            color: AppTheme.textPrimary,
+                                            color: AppTheme.dynamicTextPrimary(context),
                                           ),
                                         ),
                                       ],
@@ -434,6 +424,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           style: GoogleFonts.inter(
                             color: Colors.white70,
                             fontSize: 14,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
@@ -448,3 +439,4 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     );
   }
 }
+

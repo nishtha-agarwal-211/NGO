@@ -13,6 +13,7 @@ import '../../services/member_service.dart';
 import '../../services/auth_service.dart';
 import '../../utils/error_utils.dart';
 import '../../utils/communication_utils.dart';
+import '../../widgets/scale_tap_wrapper.dart';
 
 /// Full member profile screen — shows all fields, quick actions, badges.
 class MemberDetailScreen extends ConsumerWidget {
@@ -48,11 +49,11 @@ class MemberDetailScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.person_off_outlined, size: 64, color: AppTheme.textHint),
+          Icon(Icons.person_off_outlined, size: 64, color: AppTheme.dynamicTextHint(context)),
           const SizedBox(height: 16),
           Text(
             'Member not found',
-            style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
@@ -76,13 +77,13 @@ class MemberDetailScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               'Failed to load member',
-              style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600),
+              style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
               ErrorUtils.friendlyMessage(error),
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textSecondary),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -100,7 +101,7 @@ class MemberDetailScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLarge)),
         title: const Text('Deactivate Member?'),
         content: Text('Are you sure you want to deactivate ${member.name}? They will no longer appear in the active members list.'),
         actions: [
@@ -162,20 +163,20 @@ class _MemberDetailBody extends StatelessWidget {
               children: [
                 const SizedBox(height: 20),
 
-                // Quick action buttons (Call, WhatsApp, SMS)
+                // Quick action buttons (Call, WhatsApp, SMS, Email)
                 _buildQuickActions(context),
                 const SizedBox(height: 24),
 
                 // Badges (birthday / anniversary)
                 if (_hasBadges) ...[
-                  _buildBadgesSection(),
+                  _buildBadgesSection(context),
                   const SizedBox(height: 24),
                 ],
 
                 // Contact Info
-                _buildSectionHeader('Contact Information'),
+                _buildSectionHeader(context, 'Contact Information'),
                 const SizedBox(height: 12),
-                _buildInfoCard([
+                _buildInfoCard(context, [
                   _InfoRow(icon: Icons.phone_outlined, label: 'Mobile', value: member.mobile),
                   if (member.email != null)
                     _InfoRow(icon: Icons.email_outlined, label: 'Email', value: member.email!),
@@ -185,14 +186,14 @@ class _MemberDetailBody extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // Personal Info
-                _buildSectionHeader('Personal Details'),
+                _buildSectionHeader(context, 'Personal Details'),
                 const SizedBox(height: 12),
-                _buildInfoCard([
+                _buildInfoCard(context, [
                   _InfoRow(
                     icon: Icons.badge_outlined,
                     label: 'Role',
                     value: member.role.displayName,
-                    trailing: _buildRoleBadge(),
+                    trailing: _buildRoleBadge(context),
                   ),
                   _InfoRow(
                     icon: Icons.calendar_today_outlined,
@@ -216,22 +217,22 @@ class _MemberDetailBody extends StatelessWidget {
 
                 // Tags
                 if (member.tags.isNotEmpty) ...[
-                  _buildSectionHeader('Tags'),
+                  _buildSectionHeader(context, 'Tags'),
                   const SizedBox(height: 12),
-                  _buildTagsSection(),
+                  _buildTagsSection(context),
                   const SizedBox(height: 24),
                 ],
 
                 // Notes
                 if (member.notes != null && member.notes!.isNotEmpty) ...[
-                  _buildSectionHeader('Notes'),
+                  _buildSectionHeader(context, 'Notes'),
                   const SizedBox(height: 12),
-                  _buildNotesCard(),
+                  _buildNotesCard(context),
                   const SizedBox(height: 24),
                 ],
 
                 // Status
-                _buildStatusCard(),
+                _buildStatusCard(context),
                 const SizedBox(height: 100), // Bottom padding for FAB
               ],
             ),
@@ -242,11 +243,13 @@ class _MemberDetailBody extends StatelessWidget {
   }
 
   SliverAppBar _buildSliverAppBar(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return SliverAppBar(
       expandedHeight: 240,
       pinned: true,
       stretch: true,
-      backgroundColor: AppTheme.primaryColor,
+      backgroundColor: primary,
       foregroundColor: Colors.white,
       actions: [
         if (isAdmin) ...[
@@ -303,13 +306,13 @@ class _MemberDetailBody extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                   ),
                   child: Text(
                     member.role.displayName,
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                       color: Colors.white,
                     ),
                   ),
@@ -372,6 +375,8 @@ class _MemberDetailBody extends StatelessWidget {
   }
 
   Widget _buildQuickActions(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Row(
       children: [
         Expanded(
@@ -385,7 +390,7 @@ class _MemberDetailBody extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
         Expanded(
           child: Tooltip(
             message: 'WhatsApp ${member.name}',
@@ -397,20 +402,20 @@ class _MemberDetailBody extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
         Expanded(
           child: Tooltip(
             message: 'SMS ${member.name}',
             child: _QuickActionCard(
               icon: Icons.sms_outlined,
               label: 'SMS',
-              color: AppTheme.primaryColor,
+              color: primary,
               onTap: () => _launch('sms:${member.mobile}'),
             ),
           ),
         ),
         if (member.email != null) ...[
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: Tooltip(
               message: 'Email ${member.name}',
@@ -430,10 +435,11 @@ class _MemberDetailBody extends StatelessWidget {
   bool get _hasBadges =>
       member.isBirthdayWithin(7) || member.isAnniversaryWithin(7);
 
-  Widget _buildBadgesSection() {
+  Widget _buildBadgesSection(BuildContext context) {
     return Column(
       children: [
         if (member.isBirthdayWithin(7)) _buildCelebrationBanner(
+          context,
           emoji: '🎂',
           label: member.daysUntilBirthday == 0
               ? 'Birthday Today!'
@@ -444,6 +450,7 @@ class _MemberDetailBody extends StatelessWidget {
         if (member.isBirthdayWithin(7) && member.isAnniversaryWithin(7))
           const SizedBox(height: 8),
         if (member.isAnniversaryWithin(7)) _buildCelebrationBanner(
+          context,
           emoji: '💍',
           label: 'Wedding Anniversary Coming Up!',
           color: Colors.pink,
@@ -453,7 +460,8 @@ class _MemberDetailBody extends StatelessWidget {
     );
   }
 
-  Widget _buildCelebrationBanner({
+  Widget _buildCelebrationBanner(
+    BuildContext context, {
     required String emoji,
     required String label,
     required Color color,
@@ -469,15 +477,15 @@ class _MemberDetailBody extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 24)),
+          Text(emoji, style: const TextStyle(fontSize: 22)),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               label,
               style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: color.withValues(alpha: 0.9),
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: color,
               ),
             ),
           ),
@@ -499,24 +507,20 @@ class _MemberDetailBody extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Text(
       title,
-      style: GoogleFonts.inter(
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-        color: AppTheme.textPrimary,
-        letterSpacing: -0.3,
-      ),
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
     );
   }
 
-  Widget _buildInfoCard(List<_InfoRow> rows) {
+  Widget _buildInfoCard(BuildContext context, List<_InfoRow> rows) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        boxShadow: AppTheme.cardShadow,
+      decoration: AppTheme.adaptiveCardDecoration(
+        context,
+        radius: AppTheme.radiusLarge,
       ),
       child: Column(
         children: [
@@ -526,7 +530,7 @@ class _MemberDetailBody extends StatelessWidget {
               Divider(
                 height: 1,
                 indent: 52,
-                color: Colors.grey.withValues(alpha: 0.1),
+                color: AppTheme.dynamicBorder(context).withValues(alpha: 0.5),
               ),
           ],
         ],
@@ -534,22 +538,23 @@ class _MemberDetailBody extends StatelessWidget {
     );
   }
 
-  Widget _buildRoleBadge() {
+  Widget _buildRoleBadge(BuildContext context) {
     Color bgColor;
     Color textColor;
+    final primary = Theme.of(context).colorScheme.primary;
 
     switch (member.role) {
       case MemberRole.admin:
-        bgColor = AppTheme.primaryColor.withValues(alpha: 0.12);
-        textColor = AppTheme.primaryColor;
+        bgColor = primary.withValues(alpha: 0.12);
+        textColor = primary;
         break;
       case MemberRole.volunteer:
         bgColor = AppTheme.accentColor.withValues(alpha: 0.12);
         textColor = AppTheme.accentColor;
         break;
       case MemberRole.member:
-        bgColor = Colors.grey.withValues(alpha: 0.1);
-        textColor = AppTheme.textSecondary;
+        bgColor = AppTheme.dynamicBorder(context);
+        textColor = AppTheme.dynamicTextSecondary(context);
         break;
     }
 
@@ -557,12 +562,12 @@ class _MemberDetailBody extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
       ),
       child: Text(
         member.role.displayName,
         style: GoogleFonts.inter(
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.w600,
           color: textColor,
         ),
@@ -570,23 +575,24 @@ class _MemberDetailBody extends StatelessWidget {
     );
   }
 
-  Widget _buildTagsSection() {
+  Widget _buildTagsSection(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: member.tags.map((tag) {
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: AppTheme.primaryColor.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(20),
+            color: primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
           ),
           child: Text(
             tag,
             style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.primaryColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: primary,
             ),
           ),
         );
@@ -594,35 +600,35 @@ class _MemberDetailBody extends StatelessWidget {
     );
   }
 
-  Widget _buildNotesCard() {
+  Widget _buildNotesCard(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        boxShadow: AppTheme.cardShadow,
+      decoration: AppTheme.adaptiveCardDecoration(
+        context,
+        radius: AppTheme.radiusLarge,
       ),
       child: Text(
         member.notes!,
-        style: GoogleFonts.inter(
-          fontSize: 14,
-          color: AppTheme.textSecondary,
-          height: 1.5,
-        ),
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              height: 1.5,
+            ),
       ),
     );
   }
 
-  Widget _buildStatusCard() {
+  Widget _buildStatusCard(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: member.isActive
-            ? AppTheme.successColor.withValues(alpha: 0.08)
-            : AppTheme.errorColor.withValues(alpha: 0.08),
+            ? AppTheme.successColor.withValues(alpha: 0.1)
+            : AppTheme.errorColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        border: Border.all(
+          color: (member.isActive ? AppTheme.successColor : AppTheme.errorColor).withValues(alpha: 0.3),
+        ),
       ),
       child: Row(
         children: [
@@ -674,6 +680,8 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
@@ -682,10 +690,10 @@ class _InfoRow extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(10),
+              color: primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
             ),
-            child: Icon(icon, size: 18, color: AppTheme.primaryColor),
+            child: Icon(icon, size: 18, color: primary),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -694,20 +702,12 @@ class _InfoRow extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppTheme.textHint,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    color: AppTheme.textPrimary,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: Theme.of(context).textTheme.titleSmall,
                 ),
               ],
             ),
@@ -736,30 +736,36 @@ class _QuickActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: color.withValues(alpha: 0.08),
-      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 22),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
-            ],
+    return ScaleTapWrapper(
+      onTap: onTap,
+      pressedScale: 0.94,
+      enableHaptics: false, // Prevents haptic spam when tapping quick actions
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+          border: Border.all(
+            color: color.withValues(alpha: 0.25),
+            width: 1,
           ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+

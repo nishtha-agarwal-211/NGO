@@ -11,6 +11,7 @@ import '../../services/member_service.dart';
 import '../../services/event_service.dart';
 import '../../services/news_service.dart';
 import '../../widgets/shimmer_widgets.dart';
+import '../../widgets/scale_tap_wrapper.dart';
 
 /// Dashboard screen — shows key stats, upcoming events, recent birthdays,
 /// and recent news. Serves as the app's main landing page.
@@ -23,12 +24,21 @@ class DashboardScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Row(
           children: [
-            ClipOval(
-              child: Image.asset(
-                'assets/images/logo.jpg',
-                width: 36,
-                height: 36,
-                fit: BoxFit.cover,
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppTheme.secondaryColor.withValues(alpha: 0.5),
+                  width: 1.5,
+                ),
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/images/logo.jpg',
+                  width: 36,
+                  height: 36,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
             const SizedBox(width: 10),
@@ -36,17 +46,19 @@ class DashboardScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
+                Text(
                   'श्री श्याम सेवा समिति',
-                  style: TextStyle(fontSize: 16),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.3,
+                      ),
                 ),
                 Text(
                   _greeting(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: AppTheme.textSecondary,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.dynamicTextSecondary(context),
+                        fontSize: 11,
+                      ),
                 ),
               ],
             ),
@@ -58,6 +70,12 @@ class DashboardScreen extends ConsumerWidget {
             onPressed: () => context.push(AppRoutes.calendar),
             tooltip: 'Calendar',
           ),
+          IconButton(
+            icon: const Icon(Icons.account_circle_outlined),
+            onPressed: () => context.push(AppRoutes.profile),
+            tooltip: 'My Profile',
+          ),
+          const SizedBox(width: 4),
         ],
       ),
       body: RefreshIndicator(
@@ -72,7 +90,7 @@ class DashboardScreen extends ConsumerWidget {
           children: [
             const SizedBox(height: AppTheme.spacingSM),
 
-            // Stats cards
+            // Command Center Stats grid
             _StatsGrid(),
             const SizedBox(height: AppTheme.spacingLG),
 
@@ -213,8 +231,11 @@ class _StatsGrid extends ConsumerWidget {
             ),
           ],
         ),
-        error: (_, __) => const Center(
-          child: Text('Could not load stats. Pull to refresh.'),
+        error: (_, __) => Center(
+          child: Text(
+            'Could not load stats. Pull to refresh.',
+            style: TextStyle(color: AppTheme.dynamicTextSecondary(context)),
+          ),
         ),
       ),
     );
@@ -242,14 +263,14 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return ScaleTapWrapper(
       onTap: onTap,
+      pressedScale: 0.96,
       child: Container(
         padding: EdgeInsets.all(compact ? 12 : AppTheme.spacingMD),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-          boxShadow: AppTheme.adaptiveCardShadow(context),
+        decoration: AppTheme.adaptiveCardDecoration(
+          context,
+          radius: AppTheme.radiusLarge,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,8 +278,8 @@ class _StatCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
               ),
               child: Icon(icon, color: color, size: compact ? 16 : 20),
             ),
@@ -268,14 +289,16 @@ class _StatCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: compact ? 22 : 28,
                 fontWeight: FontWeight.w700,
-                color: color,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? color.withValues(alpha: 0.95)
+                    : color,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               subtitle ?? title,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary,
+                    color: AppTheme.dynamicTextSecondary(context),
                     fontWeight: FontWeight.w500,
                     fontSize: compact ? 11 : null,
                   ),
@@ -294,74 +317,75 @@ class _DonationStatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacingMD),
-      decoration: BoxDecoration(
-        gradient: AppTheme.warmGradient,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        boxShadow: [
-          BoxShadow(
-            color: AppTheme.secondaryColor.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
+    return ScaleTapWrapper(
+      onTap: () => context.go(AppRoutes.donors),
+      pressedScale: 0.96,
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.spacingMD),
+        decoration: BoxDecoration(
+          gradient: AppTheme.warmGradient,
+          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.secondaryColor.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
-            child: const Icon(
-              Icons.currency_rupee,
-              color: Colors.white,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Total Donations',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '₹${_formatAmount(totalDonations)}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: () => context.go(AppRoutes.donors),
-            child: Container(
-              padding: const EdgeInsets.all(8),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
+                color: Colors.white.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              ),
+              child: const Icon(
+                Icons.currency_rupee,
+                color: Colors.white,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Total Donations',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '₹${_formatAmount(totalDonations)}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
               ),
               child: const Icon(
                 Icons.arrow_forward,
                 color: Colors.white,
-                size: 20,
+                size: 18,
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -395,6 +419,7 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.spacingMD,
@@ -402,12 +427,12 @@ class _SectionHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: AppTheme.primaryColor),
+          Icon(icon, size: 20, color: primary),
           const SizedBox(width: 8),
           Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
           ),
           const Spacer(),
@@ -416,7 +441,11 @@ class _SectionHeader extends StatelessWidget {
               onPressed: onAction,
               child: Text(
                 actionLabel!,
-                style: const TextStyle(fontSize: 13),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: primary,
+                ),
               ),
             ),
         ],
@@ -489,17 +518,18 @@ class _EventCard extends StatelessWidget {
         .difference(DateTime(
             DateTime.now().year, DateTime.now().month, DateTime.now().day))
         .inDays;
+    final primary = Theme.of(context).colorScheme.primary;
 
-    return GestureDetector(
+    return ScaleTapWrapper(
       onTap: onTap,
+      pressedScale: 0.97,
       child: Container(
-        width: 200,
+        width: 210,
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.all(AppTheme.spacingMD),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-          boxShadow: AppTheme.adaptiveCardShadow(context),
+        decoration: AppTheme.adaptiveCardDecoration(
+          context,
+          radius: AppTheme.radiusLarge,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -509,14 +539,14 @@ class _EventCard extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
+                    horizontal: 8,
+                    vertical: 3,
                   ),
                   decoration: BoxDecoration(
                     color: daysUntil == 0
                         ? AppTheme.secondaryColor.withValues(alpha: 0.15)
-                        : AppTheme.primaryColor.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(8),
+                        : primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                   ),
                   child: Text(
                     daysUntil == 0
@@ -525,20 +555,20 @@ class _EventCard extends StatelessWidget {
                             ? 'Tomorrow'
                             : dateFormat.format(event.eventDate),
                     style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
                       color: daysUntil == 0
                           ? AppTheme.secondaryDark
-                          : AppTheme.primaryColor,
+                          : primary,
                     ),
                   ),
                 ),
                 const Spacer(),
                 if (daysUntil > 1)
                   Text(
-                    '${daysUntil}d',
+                    '${daysUntil}d left',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textHint,
+                          fontSize: 11,
                           fontWeight: FontWeight.w500,
                         ),
                   ),
@@ -569,25 +599,27 @@ class _EventCard extends StatelessWidget {
                       event.projectName!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppTheme.accentColor,
-                            fontSize: 11,
-                          ),
+                      style: TextStyle(
+                        color: AppTheme.accentColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ],
                 if (event.formattedTimeRange.isNotEmpty || event.eventTime != null) ...[
                   const SizedBox(width: 8),
-                  Icon(Icons.access_time, size: 14, color: AppTheme.textHint),
+                  Icon(Icons.access_time,
+                      size: 14, color: AppTheme.dynamicTextHint(context)),
                   const SizedBox(width: 2),
                   Text(
                     event.formattedTimeRange.isNotEmpty
                         ? event.formattedTimeRange
                         : event.eventTime!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textHint,
-                          fontSize: 11,
-                        ),
+                    style: TextStyle(
+                      color: AppTheme.dynamicTextHint(context),
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ],
@@ -616,6 +648,8 @@ class _UpcomingBirthdaysSection extends ConsumerWidget {
           );
         }
 
+        final primary = Theme.of(context).colorScheme.primary;
+
         return Column(
           children: members.take(5).map((member) {
             final days = member.daysUntilBirthday;
@@ -624,37 +658,36 @@ class _UpcomingBirthdaysSection extends ConsumerWidget {
                 horizontal: AppTheme.spacingMD,
                 vertical: 4,
               ),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                boxShadow: AppTheme.adaptiveCardShadow(context),
+              decoration: AppTheme.adaptiveCardDecoration(
+                context,
+                radius: AppTheme.radiusMedium,
               ),
               child: ListTile(
                 onTap: () => context.push('/members/${member.id}'),
                 leading: CircleAvatar(
                   backgroundColor: days == 0
                       ? AppTheme.secondaryColor
-                      : AppTheme.primaryColor.withValues(alpha: 0.1),
+                      : primary.withValues(alpha: 0.12),
                   child: days == 0
-                      ? const Text('🎂', style: TextStyle(fontSize: 20))
+                      ? const Text('🎂', style: TextStyle(fontSize: 18))
                       : Text(
                           member.initials,
                           style: TextStyle(
-                            color: AppTheme.primaryColor,
-                            fontWeight: FontWeight.w600,
+                            color: primary,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                 ),
                 title: Text(
                   member.name,
-                  style: const TextStyle(fontWeight: FontWeight.w500),
+                  style: Theme.of(context).textTheme.titleSmall,
                 ),
                 subtitle: Text(
                   member.dateOfBirth != null
                       ? DateFormat('MMM d').format(member.dateOfBirth!)
                       : '',
                   style: TextStyle(
-                    color: AppTheme.textHint,
+                    color: AppTheme.dynamicTextSecondary(context),
                     fontSize: 12,
                   ),
                 ),
@@ -666,8 +699,8 @@ class _UpcomingBirthdaysSection extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: days == 0
                         ? AppTheme.secondaryColor.withValues(alpha: 0.15)
-                        : AppTheme.primaryColor.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
+                        : primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                   ),
                   child: Text(
                     days == 0
@@ -676,11 +709,9 @@ class _UpcomingBirthdaysSection extends ConsumerWidget {
                             ? 'Tomorrow'
                             : 'In $days days',
                     style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: days == 0
-                          ? AppTheme.secondaryDark
-                          : AppTheme.primaryColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: days == 0 ? AppTheme.secondaryDark : primary,
                     ),
                   ),
                 ),
@@ -723,10 +754,9 @@ class _RecentNewsSection extends ConsumerWidget {
                 horizontal: AppTheme.spacingMD,
                 vertical: 4,
               ),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                boxShadow: AppTheme.adaptiveCardShadow(context),
+              decoration: AppTheme.adaptiveCardDecoration(
+                context,
+                radius: AppTheme.radiusMedium,
               ),
               child: ListTile(
                 onTap: () => context.push('/news/${newsItem.id}'),
@@ -735,9 +765,9 @@ class _RecentNewsSection extends ConsumerWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: newsItem.isVideo
-                        ? Colors.red.withValues(alpha: 0.1)
-                        : AppTheme.accentColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+                        ? Colors.red.withValues(alpha: 0.12)
+                        : AppTheme.accentColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                   ),
                   child: Icon(
                     newsItem.isVideo
@@ -751,21 +781,18 @@ class _RecentNewsSection extends ConsumerWidget {
                   newsItem.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14,
-                  ),
+                  style: Theme.of(context).textTheme.titleSmall,
                 ),
                 subtitle: Text(
                   '${newsItem.sourceName} · ${DateFormat('MMM d').format(newsItem.publishedDate)}',
                   style: TextStyle(
-                    color: AppTheme.textHint,
+                    color: AppTheme.dynamicTextSecondary(context),
                     fontSize: 12,
                   ),
                 ),
-                trailing: const Icon(
+                trailing: Icon(
                   Icons.chevron_right,
-                  color: AppTheme.textHint,
+                  color: AppTheme.dynamicTextHint(context),
                 ),
               ),
             );
@@ -792,23 +819,25 @@ Widget _buildEmptyCard(
   return Container(
     margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMD),
     padding: const EdgeInsets.all(AppTheme.spacingLG),
-    decoration: BoxDecoration(
-      color: Theme.of(context).cardColor,
-      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-      boxShadow: AppTheme.adaptiveCardShadow(context),
+    decoration: AppTheme.adaptiveCardDecoration(
+      context,
+      radius: AppTheme.radiusMedium,
     ),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(icon, size: 20, color: AppTheme.textHint),
+        Icon(icon, size: 20, color: AppTheme.dynamicTextHint(context)),
         const SizedBox(width: 8),
         Text(
           message,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textHint,
-              ),
+          style: TextStyle(
+            color: AppTheme.dynamicTextSecondary(context),
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     ),
   );
 }
+

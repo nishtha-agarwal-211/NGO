@@ -442,11 +442,9 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: GoogleFonts.inter(
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        color: AppTheme.textPrimary,
-      ),
+      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
     );
   }
 

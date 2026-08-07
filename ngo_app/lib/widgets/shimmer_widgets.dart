@@ -4,7 +4,24 @@ import 'package:shimmer/shimmer.dart';
 import '../config/theme.dart';
 
 /// Reusable shimmer loading widgets used across multiple screens.
-/// Eliminates duplicated shimmer-loading-card code.
+/// Theme-aware base and highlight colors for seamless dark mode support.
+
+class _ShimmerThemeColors {
+  final Color baseColor;
+  final Color highlightColor;
+  final Color containerColor;
+
+  _ShimmerThemeColors(BuildContext context)
+      : baseColor = Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF1E2338)
+            : const Color(0xFFE2E8F0),
+        highlightColor = Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF2D354E)
+            : const Color(0xFFF1F5F9),
+        containerColor = Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF1A1F36)
+            : Colors.white;
+}
 
 /// Shimmer placeholder for a list tile / card row.
 class ShimmerListTile extends StatelessWidget {
@@ -19,9 +36,10 @@ class ShimmerListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = _ShimmerThemeColors(context);
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      baseColor: colors.baseColor,
+      highlightColor: colors.highlightColor,
       child: Container(
         height: height,
         margin: margin ??
@@ -30,7 +48,7 @@ class ShimmerListTile extends StatelessWidget {
               vertical: 4,
             ),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.containerColor,
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         ),
       ),
@@ -53,15 +71,16 @@ class ShimmerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = _ShimmerThemeColors(context);
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      baseColor: colors.baseColor,
+      highlightColor: colors.highlightColor,
       child: Container(
         width: width,
         height: height,
         margin: margin ?? const EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.containerColor,
           borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
         ),
       ),
@@ -75,13 +94,14 @@ class ShimmerGridTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = _ShimmerThemeColors(context);
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      baseColor: colors.baseColor,
+      highlightColor: colors.highlightColor,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+          color: colors.containerColor,
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         ),
       ),
     );
@@ -101,15 +121,16 @@ class ShimmerStatValue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = _ShimmerThemeColors(context);
     return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+      baseColor: colors.baseColor,
+      highlightColor: colors.highlightColor,
       child: Container(
         width: width,
         height: height,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(4),
+          color: colors.containerColor,
+          borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
         ),
       ),
     );
@@ -130,7 +151,7 @@ class ShimmerDonationValue extends StatelessWidget {
         height: 24,
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
         ),
       ),
     );
@@ -172,17 +193,18 @@ class ShimmerLoadingList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = _ShimmerThemeColors(context);
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: itemCount,
       itemBuilder: (context, index) => Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
+        baseColor: colors.baseColor,
+        highlightColor: colors.highlightColor,
         child: Container(
           height: itemHeight,
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.containerColor,
             borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
           ),
         ),
@@ -190,3 +212,4 @@ class ShimmerLoadingList extends StatelessWidget {
     );
   }
 }
+

@@ -35,7 +35,12 @@ class EventDetailScreen extends ConsumerWidget {
         if (event == null) {
           return Scaffold(
             appBar: AppBar(),
-            body: const Center(child: Text('Event not found')),
+            body: Center(
+              child: Text(
+                'Event not found',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
           );
         }
         return _EventDetailBody(
@@ -54,7 +59,7 @@ class EventDetailScreen extends ConsumerWidget {
             children: [
               const Icon(Icons.error_outline, size: 48, color: AppTheme.errorColor),
               const SizedBox(height: 16),
-              Text(ErrorUtils.friendlyMessage(e), textAlign: TextAlign.center),
+              Text(ErrorUtils.friendlyMessage(e), textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: () => ref.invalidate(eventDetailProvider),
@@ -98,18 +103,18 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
                 widget.event.displayTitle,
-                style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600),
+                style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               background: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
                       AppTheme.primaryColor,
-                      AppTheme.primaryColor.withValues(alpha: 0.8),
+                      AppTheme.primaryDark,
                       AppTheme.accentColor,
                     ],
                   ),
@@ -122,21 +127,21 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
                       Icon(
                         _statusIcon(widget.event.effectiveStatus),
                         size: 40,
-                        color: Colors.white.withValues(alpha: 0.9),
+                        color: Colors.white.withValues(alpha: 0.95),
                       ),
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: _statusColor(widget.event.effectiveStatus).withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
+                          color: _statusColor(widget.event.effectiveStatus).withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                           border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                         ),
                         child: Text(
                           widget.event.effectiveStatus.displayName,
                           style: GoogleFonts.inter(
                             fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                             color: Colors.white,
                           ),
                         ),
@@ -171,15 +176,16 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Event Info Card
-                  _buildInfoCard(),
+                  _buildInfoCard(context),
                   const SizedBox(height: 20),
 
                   // Stats Row
-                  _buildStatsRow(volunteersAsync, donationsAsync, expensesAsync),
+                  _buildStatsRow(context, volunteersAsync, donationsAsync, expensesAsync),
                   const SizedBox(height: 24),
 
                   // Photos button
                   _buildSectionButton(
+                    context,
                     icon: Icons.photo_library_outlined,
                     label: 'View Photos',
                     color: AppTheme.secondaryColor,
@@ -188,10 +194,10 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
                   const SizedBox(height: 24),
 
                   // Volunteers Section
-                  _buildSectionHeader('Volunteers', Icons.people_outline),
+                  _buildSectionHeader(context, 'Volunteers', Icons.people_outline),
                   const SizedBox(height: 12),
                   volunteersAsync.when(
-                    data: (volunteers) => _buildVolunteersList(volunteers),
+                    data: (volunteers) => _buildVolunteersList(context, volunteers),
                     loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                     error: (e, _) => Text(ErrorUtils.friendlyMessage(e)),
                   ),
@@ -199,20 +205,20 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
 
                   // Donations Section
                   if (widget.isAdmin) ...[
-                    _buildSectionHeader('Donations', Icons.volunteer_activism_outlined),
+                    _buildSectionHeader(context, 'Donations', Icons.volunteer_activism_outlined),
                     const SizedBox(height: 12),
                     donationsAsync.when(
-                      data: (donations) => _buildDonationsList(donations),
+                      data: (donations) => _buildDonationsList(context, donations),
                       loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                       error: (e, _) => Text(ErrorUtils.friendlyMessage(e)),
                     ),
                     const SizedBox(height: 24),
 
                     // Expenses Section
-                    _buildSectionHeader('Expenses', Icons.receipt_long_outlined),
+                    _buildSectionHeader(context, 'Expenses', Icons.receipt_long_outlined),
                     const SizedBox(height: 12),
                     expensesAsync.when(
-                      data: (expenses) => _buildExpensesList(expenses),
+                      data: (expenses) => _buildExpensesList(context, expenses),
                       loading: () => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
                       error: (e, _) => Text(ErrorUtils.friendlyMessage(e)),
                     ),
@@ -221,19 +227,20 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
 
                   // Notes
                   if (widget.event.notes != null && widget.event.notes!.isNotEmpty) ...[
-                    _buildSectionHeader('Notes', Icons.notes_outlined),
+                    _buildSectionHeader(context, 'Notes', Icons.notes_outlined),
                     const SizedBox(height: 12),
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                        border: Border.all(color: AppTheme.dividerColor),
+                      decoration: AppTheme.adaptiveCardDecoration(
+                        context,
+                        radius: AppTheme.radiusMedium,
                       ),
                       child: Text(
                         widget.event.notes!,
-                        style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textPrimary, height: 1.5),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              height: 1.5,
+                            ),
                       ),
                     ),
                   ],
@@ -250,42 +257,41 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
 
   // ─── Info Card ────────────────────────────────────────────────
 
-  Widget _buildInfoCard() {
+  Widget _buildInfoCard(BuildContext context) {
     final timeDisplay = widget.event.formattedTimeRange.isNotEmpty
         ? widget.event.formattedTimeRange
         : widget.event.eventTime;
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-        boxShadow: AppTheme.cardShadow,
+      decoration: AppTheme.adaptiveCardDecoration(
+        context,
+        radius: AppTheme.radiusLarge,
       ),
       child: Column(
         children: [
-          _infoRow(Icons.calendar_today_outlined, 'Date', _dateFormat.format(widget.event.eventDate)),
+          _infoRow(context, Icons.calendar_today_outlined, 'Date', _dateFormat.format(widget.event.eventDate)),
           if (timeDisplay != null && timeDisplay.isNotEmpty) ...[
-            const Divider(height: 20),
-            _infoRow(Icons.access_time_outlined, 'Time', timeDisplay),
+            Divider(height: 20, color: AppTheme.dynamicBorder(context)),
+            _infoRow(context, Icons.access_time_outlined, 'Time', timeDisplay),
           ],
           if (widget.event.location != null) ...[
-            const Divider(height: 20),
-            _infoRow(Icons.location_on_outlined, 'Location', widget.event.location!),
+            Divider(height: 20, color: AppTheme.dynamicBorder(context)),
+            _infoRow(context, Icons.location_on_outlined, 'Location', widget.event.location!),
           ],
           if (widget.event.projectName != null) ...[
-            const Divider(height: 20),
-            _infoRow(Icons.folder_outlined, 'Project', widget.event.projectName!),
+            Divider(height: 20, color: AppTheme.dynamicBorder(context)),
+            _infoRow(context, Icons.folder_outlined, 'Project', widget.event.projectName!),
           ],
-          const Divider(height: 20),
-          _infoRow(Icons.group_outlined, 'Beneficiaries', '${widget.event.beneficiaryCount}'),
+          Divider(height: 20, color: AppTheme.dynamicBorder(context)),
+          _infoRow(context, Icons.group_outlined, 'Beneficiaries', '${widget.event.beneficiaryCount}'),
           if (widget.event.beneficiaryDetails != null && widget.event.beneficiaryDetails!.isNotEmpty) ...[
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.only(left: 36),
               child: Text(
                 widget.event.beneficiaryDetails!,
-                style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
           ],
@@ -294,17 +300,18 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
     );
   }
 
-  Widget _infoRow(IconData icon, String label, String value) {
+  Widget _infoRow(BuildContext context, IconData icon, String label, String value) {
+    final primary = Theme.of(context).colorScheme.primary;
     return Row(
       children: [
-        Icon(icon, size: 18, color: AppTheme.primaryColor),
+        Icon(icon, size: 18, color: primary),
         const SizedBox(width: 12),
         SizedBox(
           width: 90,
-          child: Text(label, style: GoogleFonts.inter(fontSize: 13, color: AppTheme.textSecondary)),
+          child: Text(label, style: Theme.of(context).textTheme.bodySmall),
         ),
         Expanded(
-          child: Text(value, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500)),
+          child: Text(value, style: Theme.of(context).textTheme.titleSmall),
         ),
       ],
     );
@@ -313,20 +320,24 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
   // ─── Stats Row ────────────────────────────────────────────────
 
   Widget _buildStatsRow(
+    BuildContext context,
     AsyncValue<List<EventVolunteer>> volunteersAsync,
     AsyncValue<List<Donation>> donationsAsync,
     AsyncValue<List<EventExpense>> expensesAsync,
   ) {
+    final primary = Theme.of(context).colorScheme.primary;
     return Row(
       children: [
         _statChip(
+          context,
           Icons.people,
           volunteersAsync.valueOrNull?.length.toString() ?? '—',
           'Volunteers',
-          AppTheme.primaryColor,
+          primary,
         ),
         const SizedBox(width: 10),
         _statChip(
+          context,
           Icons.volunteer_activism,
           donationsAsync.valueOrNull?.length.toString() ?? '—',
           'Donations',
@@ -334,6 +345,7 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
         ),
         const SizedBox(width: 10),
         _statChip(
+          context,
           Icons.receipt_long,
           expensesAsync.valueOrNull?.length.toString() ?? '—',
           'Expenses',
@@ -343,13 +355,14 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
     );
   }
 
-  Widget _statChip(IconData icon, String count, String label, Color color) {
+  Widget _statChip(BuildContext context, IconData icon, String count, String label, Color color) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Column(
           children: [
@@ -357,7 +370,7 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
             const SizedBox(height: 6),
             Text(count, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: color)),
             const SizedBox(height: 2),
-            Text(label, style: GoogleFonts.inter(fontSize: 11, color: AppTheme.textSecondary)),
+            Text(label, style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
       ),
@@ -366,24 +379,31 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
 
   // ─── Section Helpers ──────────────────────────────────────────
 
-  Widget _buildSectionHeader(String title, IconData icon) {
+  Widget _buildSectionHeader(BuildContext context, String title, IconData icon) {
+    final primary = Theme.of(context).colorScheme.primary;
     return Row(
       children: [
-        Icon(icon, size: 20, color: AppTheme.primaryColor),
+        Icon(icon, size: 20, color: primary),
         const SizedBox(width: 8),
-        Text(title, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+        ),
       ],
     );
   }
 
-  Widget _buildSectionButton({
+  Widget _buildSectionButton(
+    BuildContext context, {
     required IconData icon,
     required String label,
     required Color color,
     required VoidCallback onTap,
   }) {
     return Material(
-      color: color.withValues(alpha: 0.08),
+      color: color.withValues(alpha: 0.1),
       borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
       child: InkWell(
         onTap: onTap,
@@ -394,7 +414,7 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
             children: [
               Icon(icon, color: color, size: 24),
               const SizedBox(width: 12),
-              Text(label, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w600, color: color)),
+              Text(label, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: color)),
               const Spacer(),
               Icon(Icons.arrow_forward_ios, size: 16, color: color),
             ],
@@ -406,12 +426,12 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
 
   // ─── Volunteers List ──────────────────────────────────────────
 
-  Widget _buildVolunteersList(List<EventVolunteer> volunteers) {
+  Widget _buildVolunteersList(BuildContext context, List<EventVolunteer> volunteers) {
     return Column(
       children: [
         if (volunteers.isEmpty)
-          _emptyCard('No volunteers assigned yet'),
-        ...volunteers.map((v) => _volunteerTile(v)),
+          _emptyCard(context, 'No volunteers assigned yet'),
+        ...volunteers.map((v) => _volunteerTile(context, v)),
         if (widget.isAdmin) ...[
           const SizedBox(height: 8),
           Row(
@@ -438,44 +458,53 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
     );
   }
 
-  Widget _volunteerTile(EventVolunteer v) {
+  Widget _volunteerTile(BuildContext context, EventVolunteer v) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     final tile = Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-        border: Border.all(color: AppTheme.dividerColor),
+      decoration: AppTheme.adaptiveCardDecoration(
+        context,
+        radius: AppTheme.radiusSmall,
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: (v.isAdHoc ? AppTheme.textHint : AppTheme.primaryColor).withValues(alpha: 0.1),
+            backgroundColor: (v.isAdHoc ? AppTheme.dynamicTextHint(context) : primary).withValues(alpha: 0.12),
             child: Icon(
               v.isAdHoc ? Icons.person_outline : Icons.person,
               size: 16,
-              color: v.isAdHoc ? AppTheme.textHint : AppTheme.primaryColor,
+              color: v.isAdHoc ? AppTheme.dynamicTextHint(context) : primary,
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(v.displayName, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500)),
+            child: Text(
+              v.displayName,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
           ),
           if (v.isAdHoc)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: AppTheme.textHint.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4),
+                color: AppTheme.dynamicBorder(context),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
               ),
-              child: Text('Ad-hoc', style: GoogleFonts.inter(fontSize: 10, color: AppTheme.textHint)),
+              child: Text(
+                'Ad-hoc',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ),
           if (widget.isAdmin) ...[
             const SizedBox(width: 8),
             InkWell(
               onTap: () => _removeVolunteer(v),
-              child: Icon(Icons.close, size: 16, color: AppTheme.textHint),
+              child: Icon(Icons.close, size: 16, color: AppTheme.dynamicTextHint(context)),
             ),
           ],
         ],
@@ -507,7 +536,7 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
 
   // ─── Donations List ───────────────────────────────────────────
 
-  Widget _buildDonationsList(List<Donation> donations) {
+  Widget _buildDonationsList(BuildContext context, List<Donation> donations) {
     final totalCash = donations
         .where((d) => d.donationType == DonationType.cash && d.amount != null)
         .fold<double>(0, (sum, d) => sum + d.amount!);
@@ -520,12 +549,12 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
             padding: const EdgeInsets.all(12),
             margin: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
-              color: AppTheme.successColor.withValues(alpha: 0.08),
+              color: AppTheme.successColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
             ),
             child: Row(
               children: [
-                Icon(Icons.currency_rupee, size: 18, color: AppTheme.successColor),
+                const Icon(Icons.currency_rupee, size: 18, color: AppTheme.successColor),
                 const SizedBox(width: 6),
                 Text(
                   'Total: ₹${totalCash.toStringAsFixed(0)}',
@@ -535,8 +564,8 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
             ),
           ),
         if (donations.isEmpty)
-          _emptyCard('No donations logged'),
-        ...donations.map((d) => _donationTile(d)),
+          _emptyCard(context, 'No donations logged'),
+        ...donations.map((d) => _donationTile(context, d)),
         if (widget.isAdmin) ...[
           const SizedBox(height: 8),
           SizedBox(
@@ -552,14 +581,13 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
     );
   }
 
-  Widget _donationTile(Donation d) {
+  Widget _donationTile(BuildContext context, Donation d) {
     final tile = Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-        border: Border.all(color: AppTheme.dividerColor),
+      decoration: AppTheme.adaptiveCardDecoration(
+        context,
+        radius: AppTheme.radiusSmall,
       ),
       child: Row(
         children: [
@@ -569,24 +597,29 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(d.donorName ?? 'Unknown Donor', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500)),
-                Text(d.displayValue, style: GoogleFonts.inter(fontSize: 12, color: AppTheme.textSecondary)),
+                Text(
+                  d.donorName ?? 'Unknown Donor',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                Text(d.displayValue, style: Theme.of(context).textTheme.bodySmall),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
-              color: AppTheme.accentColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(4),
+              color: AppTheme.accentColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
             ),
-            child: Text(d.donationType.displayName, style: GoogleFonts.inter(fontSize: 11, color: AppTheme.accentColor, fontWeight: FontWeight.w500)),
+            child: Text(d.donationType.displayName, style: GoogleFonts.inter(fontSize: 11, color: AppTheme.accentColor, fontWeight: FontWeight.w600)),
           ),
           if (widget.isAdmin) ...[
             const SizedBox(width: 8),
             InkWell(
               onTap: () => _deleteDonation(d),
-              child: Icon(Icons.close, size: 16, color: AppTheme.textHint),
+              child: Icon(Icons.close, size: 16, color: AppTheme.dynamicTextHint(context)),
             ),
           ],
         ],
@@ -618,7 +651,7 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
 
   // ─── Expenses List ────────────────────────────────────────────
 
-  Widget _buildExpensesList(List<EventExpense> expenses) {
+  Widget _buildExpensesList(BuildContext context, List<EventExpense> expenses) {
     final total = expenses.fold<double>(0, (sum, e) => sum + e.amount);
 
     return Column(
@@ -629,12 +662,12 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
             padding: const EdgeInsets.all(12),
             margin: const EdgeInsets.only(bottom: 10),
             decoration: BoxDecoration(
-              color: AppTheme.secondaryColor.withValues(alpha: 0.08),
+              color: AppTheme.secondaryColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
             ),
             child: Row(
               children: [
-                Icon(Icons.currency_rupee, size: 18, color: AppTheme.secondaryDark),
+                const Icon(Icons.currency_rupee, size: 18, color: AppTheme.secondaryDark),
                 const SizedBox(width: 6),
                 Text(
                   'Total: ₹${total.toStringAsFixed(0)}',
@@ -644,8 +677,8 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
             ),
           ),
         if (expenses.isEmpty)
-          _emptyCard('No expenses recorded'),
-        ...expenses.map((e) => _expenseTile(e)),
+          _emptyCard(context, 'No expenses recorded'),
+        ...expenses.map((e) => _expenseTile(context, e)),
         if (widget.isAdmin) ...[
           const SizedBox(height: 8),
           SizedBox(
@@ -661,28 +694,32 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
     );
   }
 
-  Widget _expenseTile(EventExpense e) {
+  Widget _expenseTile(BuildContext context, EventExpense e) {
     final tile = Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-        border: Border.all(color: AppTheme.dividerColor),
+      decoration: AppTheme.adaptiveCardDecoration(
+        context,
+        radius: AppTheme.radiusSmall,
       ),
       child: Row(
         children: [
-          Icon(Icons.receipt_outlined, size: 18, color: AppTheme.secondaryColor),
+          const Icon(Icons.receipt_outlined, size: 18, color: AppTheme.secondaryColor),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(e.description, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w500)),
+            child: Text(
+              e.description,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
           ),
-          Text(e.displayAmount, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.secondaryDark)),
+          Text(e.displayAmount, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.secondaryDark)),
           if (widget.isAdmin) ...[
             const SizedBox(width: 8),
             InkWell(
               onTap: () => _deleteExpense(e),
-              child: Icon(Icons.close, size: 16, color: AppTheme.textHint),
+              child: Icon(Icons.close, size: 16, color: AppTheme.dynamicTextHint(context)),
             ),
           ],
         ],
@@ -712,16 +749,15 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
     );
   }
 
-  Widget _emptyCard(String text) {
+  Widget _emptyCard(BuildContext context, String text) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-        border: Border.all(color: AppTheme.dividerColor),
+      decoration: AppTheme.adaptiveCardDecoration(
+        context,
+        radius: AppTheme.radiusSmall,
       ),
-      child: Text(text, textAlign: TextAlign.center, style: GoogleFonts.inter(color: AppTheme.textHint)),
+      child: Text(text, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
     );
   }
 
@@ -741,7 +777,7 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
         final confirmed = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLarge)),
             title: const Text('Delete Event?'),
             content: const Text('This will permanently delete this event and all associated data.'),
             actions: [
@@ -786,7 +822,7 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
     final selected = await showDialog<Member>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLarge)),
         title: const Text('Select Member'),
         content: SizedBox(
           width: double.maxFinite,
@@ -797,11 +833,11 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
               final m = membersAsync[i];
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-                  child: Text(m.initials, style: const TextStyle(color: AppTheme.primaryColor, fontSize: 13)),
+                  backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                  child: Text(m.initials, style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 13, fontWeight: FontWeight.w700)),
                 ),
-                title: Text(m.name),
-                subtitle: Text(m.mobile, style: const TextStyle(fontSize: 12)),
+                title: Text(m.name, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                subtitle: Text(m.mobile, style: Theme.of(context).textTheme.bodySmall),
                 onTap: () => Navigator.pop(ctx, m),
               );
             },
@@ -821,7 +857,7 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLarge)),
         title: const Text('Add Volunteer'),
         content: TextField(
           controller: nameController,
@@ -856,7 +892,7 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLarge)),
           title: const Text('Log Donation'),
           content: SingleChildScrollView(
             child: Column(
@@ -954,7 +990,7 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLarge)),
         title: const Text('Add Expense'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1035,3 +1071,4 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
     }
   }
 }
+

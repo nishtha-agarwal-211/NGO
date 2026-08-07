@@ -23,12 +23,14 @@ import '../screens/news/news_list_screen.dart';
 import '../screens/news/news_detail_screen.dart';
 import '../screens/news/news_form_screen.dart';
 import '../screens/photos/photo_gallery_screen.dart';
+import '../screens/profile/profile_screen.dart';
 import '../widgets/app_shell.dart';
 
 /// Route names for type-safe navigation.
 class AppRoutes {
   static const String login = '/login';
   static const String dashboard = '/dashboard';
+  static const String profile = '/profile';
   static const String members = '/members';
   static const String memberDetail = '/members/:id';
   static const String memberAdd = '/members/add';
@@ -221,6 +223,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => PhotoGalleryScreen(
           eventId: state.pathParameters['id']!,
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.profile,
+        builder: (context, state) => const ProfileScreen(),
       ),
     ],
   );

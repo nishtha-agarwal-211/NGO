@@ -68,10 +68,13 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
                 controller: _searchController,
                 autofocus: true,
                 onChanged: _onSearchChanged,
-                style: GoogleFonts.inter(fontSize: 16),
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  color: AppTheme.dynamicTextPrimary(context),
+                ),
                 decoration: InputDecoration(
                   hintText: 'Search events...',
-                  hintStyle: GoogleFonts.inter(color: AppTheme.textHint),
+                  hintStyle: GoogleFonts.inter(color: AppTheme.dynamicTextHint(context)),
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
@@ -113,7 +116,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
                         Icon(_statusIcon(s), size: 18, color: _statusColor(s)),
                         const SizedBox(width: 8),
                         Text(s.displayName),
-                        if (_statusFilter == s) ...[const Spacer(), const Icon(Icons.check, size: 18, color: AppTheme.primaryColor)],
+                        if (_statusFilter == s) ...[const Spacer(), Icon(Icons.check, size: 18, color: Theme.of(context).colorScheme.primary)],
                       ],
                     ),
                   )),
@@ -123,10 +126,10 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
                     value: 'type_${t.name}',
                     child: Row(
                       children: [
-                        Icon(t == ProjectType.recurring ? Icons.repeat : Icons.trending_up, size: 18, color: AppTheme.primaryColor),
+                        Icon(t == ProjectType.recurring ? Icons.repeat : Icons.trending_up, size: 18, color: Theme.of(context).colorScheme.primary),
                         const SizedBox(width: 8),
                         Text(t.displayName),
-                        if (_typeFilter == t) ...[const Spacer(), const Icon(Icons.check, size: 18, color: AppTheme.primaryColor)],
+                        if (_typeFilter == t) ...[const Spacer(), Icon(Icons.check, size: 18, color: Theme.of(context).colorScheme.primary)],
                       ],
                     ),
                   )),
@@ -143,7 +146,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
             children: [
               const Icon(Icons.error_outline, size: 48, color: AppTheme.errorColor),
               const SizedBox(height: 16),
-              Text('Error: $e', textAlign: TextAlign.center),
+              Text('Error: $e', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: () => ref.invalidate(projectListProvider),
@@ -166,6 +169,7 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
 
   Widget _buildCategoryGrid(List<Project> projects) {
     if (projects.isEmpty) {
+      final primary = Theme.of(context).colorScheme.primary;
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -173,16 +177,16 @@ class _ProjectListScreenState extends ConsumerState<ProjectListScreen> {
             Container(
               width: 88, height: 88,
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(24),
+                color: primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppTheme.radiusXLarge),
               ),
-              child: const Icon(Icons.event_note_outlined, size: 44, color: AppTheme.primaryColor),
+              child: Icon(Icons.event_note_outlined, size: 44, color: primary),
             ),
             const SizedBox(height: 24),
-            Text('No event categories yet', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w600)),
+            Text('No event categories yet', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Text('Create your first category to get started',
-                style: GoogleFonts.inter(fontSize: 14, color: AppTheme.textSecondary)),
+                style: Theme.of(context).textTheme.bodyMedium),
           ],
         ),
       );
@@ -277,140 +281,130 @@ class _CategoryFolderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScaleTapWrapper(
+      onTap: onTap,
+      pressedScale: 0.98,
+      enableHaptics: true,
       child: Padding(
         padding: const EdgeInsets.only(bottom: 12),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  _cardColor,
-                  _cardColor.withValues(alpha: 0.8),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: _cardColor.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                _cardColor,
+                _cardColor.withValues(alpha: 0.85),
               ],
             ),
-            child: Stack(
-              children: [
-                // Background folder pattern
-                Positioned(
-                  right: -20,
-                  bottom: -15,
-                  child: Icon(
-                    Icons.folder_open,
-                    size: 120,
-                    color: Colors.white.withValues(alpha: 0.08),
-                  ),
+            boxShadow: AppTheme.adaptiveCardShadow(context),
+          ),
+          child: Stack(
+            children: [
+              // Background folder pattern
+              Positioned(
+                right: -20,
+                bottom: -15,
+                child: Icon(
+                  Icons.folder_open,
+                  size: 120,
+                  color: Colors.white.withValues(alpha: 0.08),
                 ),
-                // Content
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          // Category icon
-                          Container(
-                            width: 48, height: 48,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Icon(
-                              _categoryIcon(project.category, project.isRecurring),
-                              color: Colors.white,
-                              size: 24,
-                            ),
+              ),
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        // Category icon
+                        Container(
+                          width: 48, height: 48,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                           ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
+                          child: Icon(
+                            _categoryIcon(project.category, project.isRecurring),
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                project.name,
+                                style: GoogleFonts.inter(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (project.description != null) ...[
+                                const SizedBox(height: 4),
                                 Text(
-                                  project.name,
+                                  project.description!,
                                   style: GoogleFonts.inter(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
+                                    fontSize: 13,
+                                    color: Colors.white.withValues(alpha: 0.8),
                                   ),
-                                  maxLines: 2,
+                                  maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                if (project.description != null) ...[
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    project.description!,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 13,
-                                      color: Colors.white.withValues(alpha: 0.75),
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
                               ],
-                            ),
+                            ],
                           ),
-                          // Arrow
-                          Container(
-                            width: 36, height: 36,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(
-                              Icons.arrow_forward_ios,
-                              color: Colors.white,
-                              size: 16,
-                            ),
+                        ),
+                        // Arrow
+                        Container(
+                          width: 36, height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Bottom info row
-                      Row(
-                        children: [
-                          // Status badge
+                          child: const Icon(
+                            Icons.arrow_forward_ios,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Bottom info row
+                    Row(
+                      children: [
+                        // Status badge
+                        _buildBadge(
+                          project.status.displayName,
+                          icon: _statusIcon(project.status),
+                        ),
+                        const SizedBox(width: 8),
+                        // Type badge
+                        if (project.isRecurring) ...[
                           _buildBadge(
-                            project.status.displayName,
-                            icon: _statusIcon(project.status),
+                            project.recurrenceSummary.isNotEmpty
+                                ? project.recurrenceSummary
+                                : 'Recurring',
+                            icon: Icons.repeat,
                           ),
-                          const SizedBox(width: 8),
-                          // Type badge
-                          if (project.isRecurring) ...[
-                            _buildBadge(
-                              project.recurrenceSummary.isNotEmpty
-                                  ? project.recurrenceSummary
-                                  : 'Recurring',
-                              icon: Icons.repeat,
-                            ),
-                          ] else ...[
-                            if (project.category != null)
-                              _buildBadge(project.category!, icon: Icons.label_outline),
-                          ],
+                        ] else ...[
+                          if (project.category != null)
+                            _buildBadge(project.category!, icon: Icons.label_outline),
                         ],
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            ],
           ),
         ),
       ),
@@ -421,14 +415,14 @@ class _CategoryFolderCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 13, color: Colors.white.withValues(alpha: 0.9)),
+            Icon(icon, size: 13, color: Colors.white.withValues(alpha: 0.95)),
             const SizedBox(width: 5),
           ],
           Flexible(
@@ -436,8 +430,8 @@ class _CategoryFolderCard extends StatelessWidget {
               label,
               style: GoogleFonts.inter(
                 fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: Colors.white.withValues(alpha: 0.9),
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -456,3 +450,4 @@ class _CategoryFolderCard extends StatelessWidget {
     }
   }
 }
+

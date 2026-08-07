@@ -56,12 +56,18 @@ class _AppShellState extends ConsumerState<AppShell> {
       body: widget.child,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
+          color: AppTheme.dynamicCardColor(context),
+          border: Border(
+            top: BorderSide(
+              color: AppTheme.dynamicBorder(context),
+              width: 1,
+            ),
+          ),
           boxShadow: AppTheme.adaptiveCardShadow(context),
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
             child: isAdminAsync.when(
               data: (isAdmin) => _buildBottomNav(isAdmin),
               loading: () => _buildBottomNav(false),
@@ -109,3 +115,4 @@ class _AppShellState extends ConsumerState<AppShell> {
     );
   }
 }
+

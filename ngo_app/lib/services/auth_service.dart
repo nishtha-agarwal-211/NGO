@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/enums.dart';
+import '../models/member.dart';
 
 /// Authentication service wrapping Supabase Auth.
 class AuthService {
@@ -93,6 +94,99 @@ class AuthService {
       return null;
     }
   }
+
+  /// Fetch complete user profile data including associated member details.
+  Future<UserProfileData?> getCurrentUserProfileData() async {
+    final user = currentUser;
+    if (user == null) return null;
+
+    MemberRole role = MemberRole.member;
+    String? memberId;
+
+    try {
+      final profileRes = await _client
+          .from('profiles')
+          .select('role, member_id')
+          .eq('id', user.id)
+          .maybeSingle();
+
+      if (profileRes != null) {
+        if (profileRes['role'] != null) {
+          role = MemberRole.fromString(profileRes['role'] as String);
+        }
+        memberId = profileRes['member_id'] as String?;
+      }
+    } catch (_) {}
+
+    Member? member;
+    try {
+      if (memberId != null) {
+        final memberRes = await _client
+            .from('members')
+            .select()
+            .eq('id', memberId)
+            .maybeSingle();
+        if (memberRes != null) {
+          member = Member.fromJson(memberRes);
+        }
+      }
+
+      if (member == null && user.email != null && user.email!.isNotEmpty) {
+        final memberRes = await _client
+            .from('members')
+            .select()
+            .or('auth_user_id.eq.${user.id},email.eq.${user.email}')
+            .limit(1)
+            .maybeSingle();
+        if (memberRes != null) {
+          member = Member.fromJson(memberRes);
+        }
+      }
+    } catch (_) {}
+
+    return UserProfileData(
+      user: user,
+      role: role,
+      member: member,
+    );
+  }
+}
+
+/// Data bundle containing the current user's auth user, role, and linked member profile.
+class UserProfileData {
+  final User user;
+  final MemberRole role;
+  final Member? member;
+
+  const UserProfileData({
+    required this.user,
+    required this.role,
+    this.member,
+  });
+
+  String get displayName {
+    if (member != null && member!.name.isNotEmpty) {
+      return member!.name;
+    }
+    final metaName = user.userMetadata?['full_name'] as String?;
+    if (metaName != null && metaName.isNotEmpty) {
+      return metaName;
+    }
+    if (user.email != null && user.email!.contains('@')) {
+      final prefix = user.email!.split('@').first;
+      return prefix[0].toUpperCase() + prefix.substring(1);
+    }
+    return 'User Profile';
+  }
+
+  String get initials {
+    final name = displayName;
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+    }
+    return name.isNotEmpty ? name[0].toUpperCase() : '?';
+  }
 }
 
 // ─── Riverpod Providers ─────────────────────────────────────────
@@ -125,4 +219,9 @@ final isAdminProvider = FutureProvider<bool>((ref) async {
 /// Future provider for the current user's role.
 final currentUserRoleProvider = FutureProvider<MemberRole>((ref) async {
   return ref.watch(authServiceProvider).getCurrentUserRole();
+});
+
+/// Future provider for current user's profile data.
+final userProfileProvider = FutureProvider<UserProfileData?>((ref) async {
+  return ref.watch(authServiceProvider).getCurrentUserProfileData();
 });

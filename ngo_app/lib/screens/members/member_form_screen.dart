@@ -375,16 +375,14 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
   Widget _buildSectionLabel(String label) {
     return Text(
       label,
-      style: GoogleFonts.inter(
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        color: AppTheme.textPrimary,
-        letterSpacing: -0.2,
-      ),
+      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
     );
   }
 
   Widget _buildRoleSelector() {
+    final primary = Theme.of(context).colorScheme.primary;
     return Row(
       children: MemberRole.values.map((role) {
         final isSelected = _role == role;
@@ -399,13 +397,13 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? AppTheme.primaryColor
-                      : AppTheme.primaryColor.withValues(alpha: 0.05),
+                      ? primary
+                      : primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                   border: Border.all(
                     color: isSelected
-                        ? AppTheme.primaryColor
-                        : AppTheme.dividerColor,
+                        ? primary
+                        : AppTheme.dynamicBorder(context),
                   ),
                 ),
                 child: Column(
@@ -413,7 +411,7 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                     Icon(
                       _roleIcon(role),
                       size: 20,
-                      color: isSelected ? Colors.white : AppTheme.textSecondary,
+                      color: isSelected ? Colors.white : AppTheme.dynamicTextSecondary(context),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -421,7 +419,7 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: isSelected ? Colors.white : AppTheme.textSecondary,
+                        color: isSelected ? Colors.white : AppTheme.dynamicTextSecondary(context),
                       ),
                     ),
                   ],
@@ -451,9 +449,9 @@ class _MemberFormScreenState extends ConsumerState<MemberFormScreen> {
         ),
         child: Text(
           DateFormat('MMMM yyyy').format(value),
-          style: GoogleFonts.inter(
+          style: TextStyle(
             fontSize: 14,
-            color: AppTheme.textPrimary,
+            color: AppTheme.dynamicTextPrimary(context),
           ),
         ),
       ),

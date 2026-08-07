@@ -218,6 +218,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
             Row(
               children: ProjectType.values.map((type) {
                 final isSelected = _projectType == type;
+                final primary = Theme.of(context).colorScheme.primary;
                 return Expanded(
                   child: Padding(
                     padding: EdgeInsets.only(
@@ -238,14 +239,14 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? AppTheme.primaryColor
-                              : AppTheme.primaryColor.withValues(alpha: 0.05),
+                              ? primary
+                              : primary.withValues(alpha: 0.08),
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusMedium),
                           border: Border.all(
                             color: isSelected
-                                ? AppTheme.primaryColor
-                                : AppTheme.dividerColor,
+                                ? primary
+                                : AppTheme.dynamicBorder(context),
                           ),
                         ),
                         child: Column(
@@ -257,7 +258,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
                               size: 24,
                               color: isSelected
                                   ? Colors.white
-                                  : AppTheme.textSecondary,
+                                  : AppTheme.dynamicTextSecondary(context),
                             ),
                             const SizedBox(height: 6),
                             Text(
@@ -267,7 +268,7 @@ class _ProjectFormScreenState extends ConsumerState<ProjectFormScreen> {
                                 fontWeight: FontWeight.w600,
                                 color: isSelected
                                     ? Colors.white
-                                    : AppTheme.textSecondary,
+                                    : AppTheme.dynamicTextSecondary(context),
                               ),
                             ),
                           ],

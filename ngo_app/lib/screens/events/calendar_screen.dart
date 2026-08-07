@@ -9,6 +9,7 @@ import '../../config/theme.dart';
 import '../../models/event.dart';
 import '../../models/enums.dart';
 import '../../services/event_service.dart';
+import '../../widgets/scale_tap_wrapper.dart';
 
 /// Calendar screen showing all events across projects.
 /// Uses table_calendar for the calendar widget with event dots,
@@ -63,6 +64,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     final selectedEvents = _getEventsForDay(_selectedDay);
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       appBar: AppBar(
@@ -91,10 +93,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           // ─── Calendar Widget ────────────────────────────────
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-              boxShadow: AppTheme.cardShadow,
+            decoration: AppTheme.adaptiveCardDecoration(
+              context,
+              radius: AppTheme.radiusLarge,
             ),
             child: TableCalendar<Event>(
               firstDay: DateTime(2020),
@@ -120,15 +121,15 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               calendarStyle: CalendarStyle(
                 outsideDaysVisible: false,
                 todayDecoration: BoxDecoration(
-                  color: AppTheme.secondaryColor.withValues(alpha: 0.3),
+                  color: AppTheme.secondaryColor.withValues(alpha: 0.25),
                   shape: BoxShape.circle,
                 ),
                 todayTextStyle: GoogleFonts.inter(
                   fontWeight: FontWeight.w700,
                   color: AppTheme.secondaryDark,
                 ),
-                selectedDecoration: const BoxDecoration(
-                  color: AppTheme.primaryColor,
+                selectedDecoration: BoxDecoration(
+                  color: primary,
                   shape: BoxShape.circle,
                 ),
                 selectedTextStyle: GoogleFonts.inter(
@@ -137,10 +138,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 ),
                 defaultTextStyle: GoogleFonts.inter(
                   fontWeight: FontWeight.w500,
+                  color: AppTheme.dynamicTextPrimary(context),
                 ),
                 weekendTextStyle: GoogleFonts.inter(
                   fontWeight: FontWeight.w500,
-                  color: AppTheme.errorColor.withValues(alpha: 0.7),
+                  color: AppTheme.errorColor,
                 ),
                 markerDecoration: const BoxDecoration(
                   color: AppTheme.accentColor,
@@ -154,38 +156,38 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 titleCentered: true,
                 formatButtonVisible: true,
                 formatButtonDecoration: BoxDecoration(
-                  border: Border.all(color: AppTheme.primaryColor),
+                  border: Border.all(color: primary),
                   borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
                 ),
                 formatButtonTextStyle: GoogleFonts.inter(
                   fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.w700,
+                  color: primary,
                 ),
                 titleTextStyle: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
+                  color: AppTheme.dynamicTextPrimary(context),
                 ),
-                leftChevronIcon: const Icon(
+                leftChevronIcon: Icon(
                   Icons.chevron_left,
-                  color: AppTheme.primaryColor,
+                  color: primary,
                 ),
-                rightChevronIcon: const Icon(
+                rightChevronIcon: Icon(
                   Icons.chevron_right,
-                  color: AppTheme.primaryColor,
+                  color: primary,
                 ),
               ),
               daysOfWeekStyle: DaysOfWeekStyle(
                 weekdayStyle: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.textSecondary,
+                  color: AppTheme.dynamicTextSecondary(context),
                 ),
                 weekendStyle: GoogleFonts.inter(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.errorColor.withValues(alpha: 0.6),
+                  color: AppTheme.errorColor,
                 ),
               ),
             ),
@@ -200,7 +202,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   width: 4,
                   height: 20,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor,
+                    color: primary,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -208,11 +210,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 Expanded(
                   child: Text(
                     DateFormat('EEEE, MMMM d, yyyy').format(_selectedDay),
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
-                    ),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
                 ),
                 Container(
@@ -222,17 +222,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   ),
                   decoration: BoxDecoration(
                     color: selectedEvents.isEmpty
-                        ? AppTheme.textHint.withValues(alpha: 0.15)
+                        ? AppTheme.dynamicTextHint(context).withValues(alpha: 0.15)
                         : AppTheme.accentColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                   ),
                   child: Text(
                     '${selectedEvents.length} event${selectedEvents.length == 1 ? '' : 's'}',
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                       color: selectedEvents.isEmpty
-                          ? AppTheme.textHint
+                          ? AppTheme.dynamicTextHint(context)
                           : AppTheme.accentColor,
                     ),
                   ),
@@ -267,15 +267,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           Icon(
             Icons.event_available,
             size: 56,
-            color: AppTheme.textHint.withValues(alpha: 0.4),
+            color: AppTheme.dynamicTextHint(context),
           ),
           const SizedBox(height: 12),
           Text(
             'No events on this day',
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              color: AppTheme.textHint,
-            ),
+            style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 8),
           TextButton.icon(
@@ -298,140 +295,121 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         ? event.formattedTimeRange
         : (event.eventTime != null ? _formatTime(event.eventTime!) : '');
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        child: InkWell(
-          onTap: () => context.push('/events/${event.id}'),
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-              border: Border.all(
-                color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
+    return ScaleTapWrapper(
+      onTap: () => context.push('/events/${event.id}'),
+      pressedScale: 0.98,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: AppTheme.adaptiveCardDecoration(
+          context,
+          radius: AppTheme.radiusMedium,
+        ),
+        child: Row(
+          children: [
+            // Status indicator
+            Container(
+              width: 4,
+              height: 48,
+              decoration: BoxDecoration(
+                color: statusColor,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-            child: Row(
-              children: [
-                // Status indicator
-                Container(
-                  width: 4,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                // Event info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        event.displayTitle,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).textTheme.titleMedium?.color,
+            const SizedBox(width: 14),
+            // Event info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    event.displayTitle,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          if (event.projectName != null) ...[
-                            Icon(
-                              Icons.folder_outlined,
-                              size: 14,
-                              color: AppTheme.textHint,
-                            ),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                event.projectName!,
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  color: AppTheme.textSecondary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                          if (timeDisplay.isNotEmpty) ...[
-                            const SizedBox(width: 12),
-                            Icon(
-                              Icons.access_time,
-                              size: 14,
-                              color: AppTheme.textHint,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              timeDisplay,
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
-                          ],
-                          if (event.location != null) ...[
-                            const SizedBox(width: 12),
-                            Icon(
-                              Icons.location_on_outlined,
-                              size: 14,
-                              color: AppTheme.textHint,
-                            ),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                event.location!,
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  color: AppTheme.textSecondary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      if (event.projectName != null) ...[
+                        Icon(
+                          Icons.folder_outlined,
+                          size: 14,
+                          color: AppTheme.dynamicTextHint(context),
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            event.projectName!,
+                            style: Theme.of(context).textTheme.bodySmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                      if (timeDisplay.isNotEmpty) ...[
+                        const SizedBox(width: 12),
+                        Icon(
+                          Icons.access_time,
+                          size: 14,
+                          color: AppTheme.dynamicTextHint(context),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          timeDisplay,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                      if (event.location != null) ...[
+                        const SizedBox(width: 12),
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: 14,
+                          color: AppTheme.dynamicTextHint(context),
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            event.location!,
+                            style: Theme.of(context).textTheme.bodySmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
-                ),
-                // Status badge
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    effectiveStatus.displayName,
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: statusColor,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(
-                  Icons.chevron_right,
-                  size: 20,
-                  color: AppTheme.textHint,
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+            // Status badge
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+              ),
+              child: Text(
+                effectiveStatus.displayName,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: statusColor,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: AppTheme.dynamicTextHint(context),
+            ),
+          ],
         ),
       ),
     );
@@ -440,7 +418,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   Color _getStatusColor(EventStatus status) {
     switch (status) {
       case EventStatus.upcoming:
-        return AppTheme.primaryColor;
+        return Theme.of(context).colorScheme.primary;
       case EventStatus.completed:
         return AppTheme.successColor;
       case EventStatus.cancelled:
@@ -463,3 +441,4 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return timeStr;
   }
 }
+
