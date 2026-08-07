@@ -222,9 +222,9 @@ class _EventFolderBody extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                    boxShadow: AppTheme.cardShadow,
+                    boxShadow: AppTheme.adaptiveCardShadow(context),
                   ),
                   child: Row(
                     children: [
@@ -252,11 +252,11 @@ class _EventFolderBody extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     'Events',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
-                    ),
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).textTheme.titleMedium?.color,
+                      ),
                   ),
                   const Spacer(),
                   eventsAsync.whenOrNull(
@@ -292,9 +292,9 @@ class _EventFolderBody extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.all(40),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-                        boxShadow: AppTheme.cardShadow,
+                        boxShadow: AppTheme.adaptiveCardShadow(context),
                       ),
                       child: Column(
                         children: [
@@ -474,7 +474,7 @@ class _DateFolderTile extends StatelessWidget {
       child: Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         child: InkWell(
           onTap: onTap,

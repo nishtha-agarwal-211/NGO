@@ -301,7 +301,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       child: Material(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         child: InkWell(
           onTap: () => context.push('/events/${event.id}'),
@@ -311,7 +311,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
               border: Border.all(
-                color: AppTheme.dividerColor.withValues(alpha: 0.5),
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
               ),
             ),
             child: Row(
@@ -336,7 +336,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
+                          color: Theme.of(context).textTheme.titleMedium?.color,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

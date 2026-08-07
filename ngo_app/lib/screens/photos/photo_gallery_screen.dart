@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
@@ -32,69 +33,217 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
   double _uploadProgress = 0;
   String? _uploadStatusText;
 
+  bool _isSelectionMode = false;
+  final Set<String> _selectedPhotoIds = {};
+
+  void _toggleSelection(String photoId) {
+    HapticFeedback.mediumImpact();
+    setState(() {
+      if (_selectedPhotoIds.contains(photoId)) {
+        _selectedPhotoIds.remove(photoId);
+      } else {
+        _selectedPhotoIds.add(photoId);
+      }
+      if (_selectedPhotoIds.isEmpty) {
+        _isSelectionMode = false;
+      }
+    });
+  }
+
+  void _selectAll(List<Photo> photos) {
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _selectedPhotoIds.addAll(photos.map((p) => p.id));
+    });
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedPhotoIds.clear();
+      _isSelectionMode = false;
+    });
+  }
+
+  Future<void> _deleteSelectedPhotos(List<Photo> photos) async {
+    final selectedPhotos = photos.where((p) => _selectedPhotoIds.contains(p.id)).toList();
+    if (selectedPhotos.isEmpty) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete ${selectedPhotos.length} item(s)?'),
+        content: Text(
+          'Are you sure you want to delete ${selectedPhotos.length} selected item(s)? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.errorColor,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _isUploading = true;
+      _uploadProgress = 0;
+      _uploadStatusText = 'Deleting 0/${selectedPhotos.length}...';
+    });
+
+    int deletedCount = 0;
+    final photoService = ref.read(photoServiceProvider);
+
+    for (final photo in selectedPhotos) {
+      try {
+        await photoService.deletePhoto(photo);
+        deletedCount++;
+        if (mounted) {
+          setState(() {
+            _uploadProgress = deletedCount / selectedPhotos.length;
+            _uploadStatusText = 'Deleting $deletedCount/${selectedPhotos.length}...';
+          });
+        }
+      } catch (e) {
+        // Continue deleting remaining items
+      }
+    }
+
+    ref.invalidate(eventPhotosProvider(widget.eventId));
+
+    if (mounted) {
+      _clearSelection();
+      setState(() {
+        _isUploading = false;
+        _uploadProgress = 0;
+        _uploadStatusText = null;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$deletedCount item(s) deleted'),
+          backgroundColor: AppTheme.successColor,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final photosAsync = ref.watch(eventPhotosProvider(widget.eventId));
     final eventAsync = ref.watch(eventDetailProvider(widget.eventId));
     final isAdminAsync = ref.watch(isAdminProvider);
+    final allPhotos = photosAsync.valueOrNull ?? [];
 
     return Scaffold(
-      appBar: AppBar(
-        title: eventAsync.when(
-          data: (event) => Text(event?.displayTitle ?? 'Media Gallery'),
-          loading: () => const Text('Media Gallery'),
-          error: (_, __) => const Text('Media Gallery'),
-        ),
-        actions: [
-          if (isAdminAsync.valueOrNull == true)
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.add_a_photo_outlined),
-              onSelected: _handleUploadOption,
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'camera',
-                  child: ListTile(
-                    leading: Icon(Icons.camera_alt_outlined),
-                    title: Text('Take Photo'),
-                    contentPadding: EdgeInsets.zero,
+      appBar: _isSelectionMode
+          ? AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: _clearSelection,
+              ),
+              title: Text('${_selectedPhotoIds.length} selected'),
+              actions: [
+                IconButton(
+                  icon: Icon(
+                    _selectedPhotoIds.length == allPhotos.length && allPhotos.isNotEmpty
+                        ? Icons.deselect
+                        : Icons.select_all,
                   ),
+                  tooltip: _selectedPhotoIds.length == allPhotos.length && allPhotos.isNotEmpty
+                      ? 'Deselect All'
+                      : 'Select All',
+                  onPressed: () {
+                    if (_selectedPhotoIds.length == allPhotos.length) {
+                      setState(() => _selectedPhotoIds.clear());
+                    } else {
+                      _selectAll(allPhotos);
+                    }
+                  },
                 ),
-                const PopupMenuItem(
-                  value: 'record_video',
-                  child: ListTile(
-                    leading: Icon(Icons.videocam_outlined),
-                    title: Text('Record Video'),
-                    contentPadding: EdgeInsets.zero,
+                if (isAdminAsync.valueOrNull == true && _selectedPhotoIds.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: AppTheme.errorColor),
+                    tooltip: 'Delete Selected',
+                    onPressed: () => _deleteSelectedPhotos(allPhotos),
                   ),
-                ),
-                const PopupMenuItem(
-                  value: 'gallery',
-                  child: ListTile(
-                    leading: Icon(Icons.photo_library_outlined),
-                    title: Text('Photo from Gallery'),
-                    contentPadding: EdgeInsets.zero,
+              ],
+            )
+          : AppBar(
+              title: eventAsync.when(
+                data: (event) => Text(event?.displayTitle ?? 'Media Gallery'),
+                loading: () => const Text('Media Gallery'),
+                error: (_, __) => const Text('Media Gallery'),
+              ),
+              actions: [
+                if (allPhotos.isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.checklist_outlined),
+                    tooltip: 'Select Items',
+                    onPressed: () {
+                      HapticFeedback.mediumImpact();
+                      setState(() => _isSelectionMode = true);
+                    },
                   ),
-                ),
-                const PopupMenuItem(
-                  value: 'video_gallery',
-                  child: ListTile(
-                    leading: Icon(Icons.video_library_outlined),
-                    title: Text('Video from Gallery'),
-                    contentPadding: EdgeInsets.zero,
+                if (isAdminAsync.valueOrNull == true)
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.add_a_photo_outlined),
+                    onSelected: _handleUploadOption,
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'camera',
+                        child: ListTile(
+                          leading: Icon(Icons.camera_alt_outlined),
+                          title: Text('Take Photo'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'record_video',
+                        child: ListTile(
+                          leading: Icon(Icons.videocam_outlined),
+                          title: Text('Record Video'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'gallery',
+                        child: ListTile(
+                          leading: Icon(Icons.photo_library_outlined),
+                          title: Text('Photo from Gallery'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'video_gallery',
+                        child: ListTile(
+                          leading: Icon(Icons.video_library_outlined),
+                          title: Text('Video from Gallery'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'multi',
+                        child: ListTile(
+                          leading: Icon(Icons.photo_library),
+                          title: Text('Multiple Photos'),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const PopupMenuItem(
-                  value: 'multi',
-                  child: ListTile(
-                    leading: Icon(Icons.photo_library),
-                    title: Text('Multiple Photos'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
               ],
             ),
-        ],
-      ),
       body: Column(
         children: [
           // Upload progress indicator
@@ -240,9 +389,28 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
         itemCount: photos.length,
         itemBuilder: (context, index) {
           final photo = photos[index];
+          final isSelected = _selectedPhotoIds.contains(photo.id);
           return _PhotoGridTile(
             photo: photo,
-            onTap: () => _openPhotoViewer(photos, index),
+            isSelectionMode: _isSelectionMode,
+            isSelected: isSelected,
+            onTap: () {
+              if (_isSelectionMode) {
+                _toggleSelection(photo.id);
+              } else {
+                _openPhotoViewer(photos, index);
+              }
+            },
+            onLongPress: () {
+              if (!_isSelectionMode) {
+                setState(() {
+                  _isSelectionMode = true;
+                  _toggleSelection(photo.id);
+                });
+              } else {
+                _toggleSelection(photo.id);
+              }
+            },
           );
         },
       ),
@@ -476,16 +644,26 @@ class _PhotoGalleryScreenState extends ConsumerState<PhotoGalleryScreen> {
 
 class _PhotoGridTile extends StatelessWidget {
   final Photo photo;
+  final bool isSelectionMode;
+  final bool isSelected;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
-  const _PhotoGridTile({required this.photo, required this.onTap});
+  const _PhotoGridTile({
+    required this.photo,
+    this.isSelectionMode = false,
+    this.isSelected = false,
+    required this.onTap,
+    this.onLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: Hero(
-        tag: 'photo_${photo.id}',
+        tag: isSelectionMode ? 'photo_select_${photo.id}' : 'photo_${photo.id}',
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
           child: Stack(
@@ -564,7 +742,7 @@ class _PhotoGridTile extends StatelessWidget {
               ],
 
               // Featured star indicator
-              if (photo.isFeatured)
+              if (photo.isFeatured && !isSelectionMode)
                 Positioned(
                   top: 4,
                   right: 4,
@@ -581,6 +759,39 @@ class _PhotoGridTile extends StatelessWidget {
                     ),
                   ),
                 ),
+
+              // Selection mode dimming overlay & check badge
+              if (isSelectionMode) ...[
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  color: isSelected
+                      ? AppTheme.primaryColor.withValues(alpha: 0.35)
+                      : Colors.black.withValues(alpha: 0.15),
+                ),
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isSelected ? AppTheme.primaryColor : Colors.black.withValues(alpha: 0.4),
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: isSelected
+                        ? const Icon(
+                            Icons.check,
+                            size: 14,
+                            color: Colors.white,
+                          )
+                        : null,
+                  ),
+                ),
+              ],
             ],
           ),
         ),

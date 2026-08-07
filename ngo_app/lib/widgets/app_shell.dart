@@ -56,14 +56,8 @@ class _AppShellState extends ConsumerState<AppShell> {
       body: widget.child,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.primaryColor.withValues(alpha: 0.08),
-              blurRadius: 20,
-              offset: const Offset(0, -4),
-            ),
-          ],
+          color: Theme.of(context).cardColor,
+          boxShadow: AppTheme.adaptiveCardShadow(context),
         ),
         child: SafeArea(
           child: Padding(

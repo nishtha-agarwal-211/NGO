@@ -247,9 +247,9 @@ class _StatCard extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(compact ? 12 : AppTheme.spacingMD),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-          boxShadow: AppTheme.cardShadow,
+          boxShadow: AppTheme.adaptiveCardShadow(context),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -497,9 +497,9 @@ class _EventCard extends StatelessWidget {
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.all(AppTheme.spacingMD),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-          boxShadow: AppTheme.cardShadow,
+          boxShadow: AppTheme.adaptiveCardShadow(context),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -625,15 +625,9 @@ class _UpcomingBirthdaysSection extends ConsumerWidget {
                 vertical: 4,
               ),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                boxShadow: AppTheme.adaptiveCardShadow(context),
               ),
               child: ListTile(
                 onTap: () => context.push('/members/${member.id}'),
@@ -730,15 +724,9 @@ class _RecentNewsSection extends ConsumerWidget {
                 vertical: 4,
               ),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                boxShadow: AppTheme.adaptiveCardShadow(context),
               ),
               child: ListTile(
                 onTap: () => context.push('/news/${newsItem.id}'),
@@ -805,15 +793,9 @@ Widget _buildEmptyCard(
     margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacingMD),
     padding: const EdgeInsets.all(AppTheme.spacingLG),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: Theme.of(context).cardColor,
       borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-      boxShadow: [
-        BoxShadow(
-          color: AppTheme.primaryColor.withValues(alpha: 0.04),
-          blurRadius: 8,
-          offset: const Offset(0, 2),
-        ),
-      ],
+      boxShadow: AppTheme.adaptiveCardShadow(context),
     ),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.center,

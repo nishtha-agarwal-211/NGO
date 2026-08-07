@@ -350,7 +350,7 @@ class _MemberCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Material(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
           child: InkWell(
             onTap: onTap,
@@ -360,7 +360,7 @@ class _MemberCard extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
               border: Border.all(
-                color: Colors.grey.withValues(alpha: 0.08),
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.5),
               ),
             ),
             child: Row(
@@ -381,7 +381,7 @@ class _MemberCard extends StatelessWidget {
                               style: GoogleFonts.inter(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
-                                color: AppTheme.textPrimary,
+                                color: Theme.of(context).textTheme.titleMedium?.color,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
