@@ -327,30 +327,32 @@ class _EventFormScreenState extends ConsumerState<EventFormScreen> {
                 alignLabelWithHint: true,
               ),
             ),
-            const SizedBox(height: 32),
-
-            // ─── Save Button ───────────────────────────────────
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
-                onPressed: _isSaving ? null : () => _saveEvent(existing),
-                icon: _isSaving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.check),
-                label:
-                    Text(widget.isEditing ? 'Update Event' : 'Create Event'),
-              ),
-            ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 24),
           ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: _isSaving ? null : () => _saveEvent(existing),
+              icon: _isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.check),
+              label:
+                  Text(widget.isEditing ? 'Update Event' : 'Create Event'),
+            ),
+          ),
         ),
       ),
     );

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../config/theme.dart';
 import '../../models/member.dart';
@@ -323,10 +324,37 @@ class _MemberDetailBody extends StatelessWidget {
 
   Widget _buildAvatar() {
     if (member.photoUrl != null) {
-      return CircleAvatar(
-        radius: 44,
-        backgroundImage: NetworkImage(member.photoUrl!),
-        backgroundColor: Colors.white.withValues(alpha: 0.2),
+      return CachedNetworkImage(
+        imageUrl: member.photoUrl!,
+        imageBuilder: (context, imageProvider) => CircleAvatar(
+          radius: 44,
+          backgroundImage: imageProvider,
+          backgroundColor: Colors.white.withValues(alpha: 0.2),
+        ),
+        placeholder: (context, url) => CircleAvatar(
+          radius: 44,
+          backgroundColor: Colors.white.withValues(alpha: 0.2),
+          child: const SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        errorWidget: (context, url, error) => CircleAvatar(
+          radius: 44,
+          backgroundColor: Colors.white.withValues(alpha: 0.2),
+          child: Text(
+            member.initials,
+            style: GoogleFonts.inter(
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+        ),
       );
     }
     return CircleAvatar(

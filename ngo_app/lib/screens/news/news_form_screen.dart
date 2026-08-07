@@ -304,30 +304,32 @@ class _NewsFormScreenState extends ConsumerState<NewsFormScreen> {
                         minimumSize: const Size(double.infinity, 48),
                       ),
                     ),
-                  const SizedBox(height: 32),
-
-                  // Save button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _isSaving ? null : _saveNewsItem,
-                      child: _isSaving
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(widget.isEditing ? 'Update' : 'Save'),
-                    ),
-                  ),
                   const SizedBox(height: 24),
                 ],
               ),
             ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: _isSaving ? null : _saveNewsItem,
+              child: _isSaving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(widget.isEditing ? 'Update' : 'Save'),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

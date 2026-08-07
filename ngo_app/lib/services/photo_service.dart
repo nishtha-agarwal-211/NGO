@@ -59,35 +59,46 @@ class PhotoService {
   /// [eventPhotosBucket] because [uploadVideo] may have stored the file
   /// in either bucket depending on server configuration.
   Future<void> deletePhoto(Photo photo) async {
-    // Remove from storage
-    try {
-      final primaryBucket = photo.isVideo
-          ? SupabaseConfig.eventVideosBucket
-          : SupabaseConfig.eventPhotosBucket;
+    // Use the stored bucket_name when available; fall back to guessing for
+    // legacy rows that predate the bucket_name column.
+    final knownBucket = photo.bucketName;
 
-      await _client.storage
-          .from(primaryBucket)
-          .remove([photo.storagePath]);
-      if (photo.thumbnailPath != null) {
-        await _client.storage
-            .from(primaryBucket)
-            .remove([photo.thumbnailPath!]);
+    if (knownBucket != null && knownBucket.isNotEmpty) {
+      // Deterministic path — we know exactly where the file lives.
+      try {
+        await _client.storage.from(knownBucket).remove([photo.storagePath]);
+        if (photo.thumbnailPath != null) {
+          await _client.storage.from(knownBucket).remove([photo.thumbnailPath!]);
+        }
+      } catch (_) {
+        // Storage deletion may fail if file doesn't exist — continue
       }
-    } catch (_) {
-      // If the primary bucket failed and this is a video, try the fallback
-      // bucket (uploadVideo may have stored it in eventPhotosBucket).
-      if (photo.isVideo) {
-        try {
-          await _client.storage
-              .from(SupabaseConfig.eventPhotosBucket)
-              .remove([photo.storagePath]);
-          if (photo.thumbnailPath != null) {
+    } else {
+      // Legacy fallback: guess based on media type, with a retry on the
+      // alternative bucket for videos.
+      try {
+        final primaryBucket = photo.isVideo
+            ? SupabaseConfig.eventVideosBucket
+            : SupabaseConfig.eventPhotosBucket;
+
+        await _client.storage.from(primaryBucket).remove([photo.storagePath]);
+        if (photo.thumbnailPath != null) {
+          await _client.storage.from(primaryBucket).remove([photo.thumbnailPath!]);
+        }
+      } catch (_) {
+        if (photo.isVideo) {
+          try {
             await _client.storage
                 .from(SupabaseConfig.eventPhotosBucket)
-                .remove([photo.thumbnailPath!]);
+                .remove([photo.storagePath]);
+            if (photo.thumbnailPath != null) {
+              await _client.storage
+                  .from(SupabaseConfig.eventPhotosBucket)
+                  .remove([photo.thumbnailPath!]);
+            }
+          } catch (_) {
+            // Storage deletion may fail if file doesn't exist — continue
           }
-        } catch (_) {
-          // Storage deletion may fail if file doesn't exist — continue
         }
       }
     }
@@ -252,6 +263,7 @@ class PhotoService {
           'uploaded_by': userId,
           'media_type': 'photo',
           'content_type': 'image/jpeg',
+          'bucket_name': SupabaseConfig.eventPhotosBucket,
         })
         .select()
         .single();
@@ -309,6 +321,7 @@ class PhotoService {
           'uploaded_by': userId,
           'media_type': 'video',
           'content_type': 'video/mp4',
+          'bucket_name': bucketName,
         })
         .select()
         .single();

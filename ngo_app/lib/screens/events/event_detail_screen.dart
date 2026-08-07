@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -438,7 +439,7 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
   }
 
   Widget _volunteerTile(EventVolunteer v) {
-    return Container(
+    final tile = Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -479,6 +480,28 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
           ],
         ],
       ),
+    );
+
+    if (!widget.isAdmin) return tile;
+
+    return Dismissible(
+      key: ValueKey('volunteer-${v.memberId ?? v.volunteerName}'),
+      direction: DismissDirection.endToStart,
+      onDismissed: (_) {
+        HapticFeedback.mediumImpact();
+        _removeVolunteer(v);
+      },
+      background: Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        decoration: BoxDecoration(
+          color: AppTheme.errorColor,
+          borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: const Icon(Icons.delete_outline, color: Colors.white),
+      ),
+      child: tile,
     );
   }
 
@@ -530,7 +553,7 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
   }
 
   Widget _donationTile(Donation d) {
-    return Container(
+    final tile = Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -568,6 +591,28 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
           ],
         ],
       ),
+    );
+
+    if (!widget.isAdmin) return tile;
+
+    return Dismissible(
+      key: ValueKey('donation-${d.id}'),
+      direction: DismissDirection.endToStart,
+      onDismissed: (_) {
+        HapticFeedback.mediumImpact();
+        _deleteDonation(d);
+      },
+      background: Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        decoration: BoxDecoration(
+          color: AppTheme.errorColor,
+          borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: const Icon(Icons.delete_outline, color: Colors.white),
+      ),
+      child: tile,
     );
   }
 
@@ -617,7 +662,7 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
   }
 
   Widget _expenseTile(EventExpense e) {
-    return Container(
+    final tile = Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
@@ -642,6 +687,28 @@ class _EventDetailBodyState extends ConsumerState<_EventDetailBody> {
           ],
         ],
       ),
+    );
+
+    if (!widget.isAdmin) return tile;
+
+    return Dismissible(
+      key: ValueKey('expense-${e.id}'),
+      direction: DismissDirection.endToStart,
+      onDismissed: (_) {
+        HapticFeedback.mediumImpact();
+        _deleteExpense(e);
+      },
+      background: Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        decoration: BoxDecoration(
+          color: AppTheme.errorColor,
+          borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: const Icon(Icons.delete_outline, color: Colors.white),
+      ),
+      child: tile,
     );
   }
 

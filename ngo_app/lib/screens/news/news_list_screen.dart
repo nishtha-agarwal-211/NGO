@@ -11,6 +11,7 @@ import '../../models/enums.dart';
 import '../../services/news_service.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/shimmer_widgets.dart';
+import '../../widgets/scale_tap_wrapper.dart';
 
 /// News list screen — public access (no auth required).
 /// Supports search, filter by type (article/video), and pull-to-refresh.
@@ -146,9 +147,12 @@ class _NewsListScreenState extends ConsumerState<NewsListScreen> {
                     ),
                     itemCount: newsItems.length,
                     itemBuilder: (context, index) {
-                      return _NewsCard(
-                        newsItem: newsItems[index],
+                      return ScaleTapWrapper(
                         onTap: () => context.push('/news/${newsItems[index].id}'),
+                        child: _NewsCard(
+                          newsItem: newsItems[index],
+                          onTap: () => context.push('/news/${newsItems[index].id}'),
+                        ),
                       );
                     },
                   ),

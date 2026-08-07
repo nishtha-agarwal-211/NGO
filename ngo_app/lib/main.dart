@@ -97,8 +97,7 @@ class _NgoAppState extends ConsumerState<NgoApp> {
       title: 'श्री श्याम सेवा समिति',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.light,
       builder: (context, child) => OfflineBannerWrapper(child: child ?? const SizedBox.shrink()),
       routerConfig: router,
     );

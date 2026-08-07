@@ -11,6 +11,7 @@ import '../../models/enums.dart';
 import '../../services/project_service.dart';
 import '../../services/auth_service.dart';
 import '../../utils/error_utils.dart';
+import '../../widgets/scale_tap_wrapper.dart';
 
 /// Event folder screen — shows all events for a project/category as
 /// date-wise folder cards. Each folder represents one event instance
@@ -468,7 +469,9 @@ class _DateFolderTile extends StatelessWidget {
         ? '${dateFormat.format(event.eventDate)} · ${event.formattedTimeRange}'
         : dateFormat.format(event.eventDate);
 
-    return Padding(
+    return ScaleTapWrapper(
+      onTap: onTap,
+      child: Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
         color: Colors.white,
@@ -594,6 +597,7 @@ class _DateFolderTile extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

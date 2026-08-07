@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// A wrapper that adds a subtle scale-down animation on press to any child widget.
 ///
@@ -51,7 +52,10 @@ class _ScaleTapWrapperState extends State<ScaleTapWrapper>
     super.dispose();
   }
 
-  void _onTapDown(TapDownDetails _) => _controller.forward();
+  void _onTapDown(TapDownDetails _) {
+    _controller.forward();
+    HapticFeedback.selectionClick();
+  }
   void _onTapUp(TapUpDetails _) => _controller.reverse();
   void _onTapCancel() => _controller.reverse();
 

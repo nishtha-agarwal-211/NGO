@@ -34,6 +34,7 @@ class Photo {
   final MediaType mediaType;
   final int? videoDurationSeconds;
   final String? contentType;
+  final String? bucketName;
 
   const Photo({
     required this.id,
@@ -49,6 +50,7 @@ class Photo {
     this.mediaType = MediaType.photo,
     this.videoDurationSeconds,
     this.contentType,
+    this.bucketName,
   });
 
   factory Photo.fromJson(Map<String, dynamic> json) {
@@ -66,6 +68,7 @@ class Photo {
       mediaType: MediaType.fromString(json['media_type'] as String?),
       videoDurationSeconds: json['video_duration_seconds'] as int?,
       contentType: json['content_type'] as String?,
+      bucketName: json['bucket_name'] as String?,
     );
   }
 
@@ -82,6 +85,7 @@ class Photo {
       'media_type': mediaType.name,
       'video_duration_seconds': videoDurationSeconds,
       'content_type': contentType,
+      'bucket_name': bucketName,
     };
   }
 
@@ -99,6 +103,7 @@ class Photo {
     MediaType? mediaType,
     int? videoDurationSeconds,
     String? contentType,
+    String? bucketName,
   }) {
     return Photo(
       id: id ?? this.id,
@@ -114,6 +119,7 @@ class Photo {
       mediaType: mediaType ?? this.mediaType,
       videoDurationSeconds: videoDurationSeconds ?? this.videoDurationSeconds,
       contentType: contentType ?? this.contentType,
+      bucketName: bucketName ?? this.bucketName,
     );
   }
 
